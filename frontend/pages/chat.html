@@ -1006,6 +1006,11 @@ const me   = _user;
 
 let ws = null, partnerInfo = null, activeRoomId = null, _isPartnerBlocked = false;
 
+function toPhotoUrl(raw) {
+  if (!raw) return '';
+  return raw.startsWith('http') || raw.startsWith('data:') ? raw : BASE + raw;
+}
+
 function roomStatusLabel(status) {
   return ({
     chatting: '대화중',
@@ -1108,7 +1113,7 @@ async function renderChatOverview(fallbackRooms) {
           const rId = room.room_id || room.id;
           const name = room.partner_name || '상대방';
           const raw = room.partner_photos?.[0] || room.partner_photo || '';
-          const photo = raw ? (raw.startsWith('http') ? raw : BASE + raw) : '';
+          const photo = toPhotoUrl(raw);
           const plan = summarizePlan(room);
           const chemi = room.chemi;
           return `<article class="ch-summary-card" onclick="selectRoom('${rId}','${encodeURIComponent(name)}','${photo}','${room.partner_id || ''}')">
@@ -1169,7 +1174,7 @@ async function loadRooms() {
       const rId   = r.room_id || r.id;
       const pName = r.partner_name || '상대방';
       const raw   = r.partner_photos?.[0] || r.partner_photo || '';
-      const abs   = raw ? (raw.startsWith('http') ? raw : BASE + raw) : '';
+      const abs   = toPhotoUrl(raw);
       const unread= parseInt(r.unread || r.unread_count || 0);
       const lastAt= r.last_at ? (() => {
         const d = new Date(r.last_at), now = new Date();
@@ -1212,7 +1217,7 @@ async function loadRooms() {
       const found = rooms.find(r=>(r.room_id||r.id)===urlRoom);
       if (found) {
         const raw=found.partner_photos?.[0]||found.partner_photo||'';
-        const abs=raw?(raw.startsWith('http')?raw:BASE+raw):'';
+        const abs=toPhotoUrl(raw);
         selectRoom(urlRoom, encodeURIComponent(found.partner_name||'상대방'), abs, found.partner_id||'');
       }
     }
@@ -1407,7 +1412,7 @@ function renderMsg(m) {
   }
   if (mtype === 'photo') {
     const rawSrc = m.content || '';
-    const src = rawSrc.startsWith('http') ? rawSrc : BASE + rawSrc;
+    const src = toPhotoUrl(rawSrc);
     return `<div class="ch-msg ${isMe?'me':''}" data-msg-id="${m.id||''}">
       ${!isMe?'<div class="ch-msg-pic"></div>':''}
       <div>

@@ -240,6 +240,11 @@ const AUTH    = { Authorization: `Bearer ${_token}` };
 const roomId  = new URLSearchParams(location.search).get('room');
 const me      = _user;
 
+function toPhotoUrl(raw) {
+  if (!raw) return '';
+  return raw.startsWith('http') || raw.startsWith('data:') ? raw : BASE + raw;
+}
+
 let selectedDate  = '';
 let selectedTime  = '19:00';
 let selectedPlace = '';
@@ -353,7 +358,7 @@ async function loadRoomInfo() {
     const picEl = document.getElementById('sumPic');
     const photo = pPhotos[0];
     if (photo) {
-      const abs = photo.startsWith('http') ? photo : BASE + photo;
+      const abs = toPhotoUrl(photo);
       picEl.style.backgroundImage = `url(${abs})`;
     }
 
