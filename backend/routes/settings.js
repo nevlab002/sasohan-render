@@ -1,9 +1,6 @@
 const router  = require('express').Router();
 const db      = require('../models/db');
 const multer  = require('multer');
-const path    = require('path');
-const fs      = require('fs');
-const { v4: uuidv4 } = require('uuid');
 const { authMiddleware, adminOnly } = require('../middleware/auth');
 
 // site_settings 테이블 자동 생성
@@ -15,15 +12,9 @@ db.query(`
   )
 `).catch(() => {});
 
-const uploadDir = path.resolve(__dirname, '..', process.env.UPLOAD_DIR || 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename:    (req, file, cb) => cb(null, `site_${uuidv4()}${path.extname(file.originalname).toLowerCase()}`)
-  }),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     file.mimetype.startsWith('image/') ? cb(null, true) : cb(new Error('이미지만 가능'));
   }
@@ -74,7 +65,7 @@ router.post('/upload', authMiddleware, adminOnly, (req, res, next) => {
 }, async (req, res) => {
   if (!req.file) return res.status(400).json({ error: '파일이 없습니다.' });
   const { key } = req.body;
-  const url = `/uploads/${req.file.filename}`;
+  const url = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
   try {
     if (key) {
       await db.query(

@@ -2547,7 +2547,7 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
   try{
     const BASE=window.location.origin;
     const s=await fetch(`${BASE}/api/settings`).then(r=>r.json()).catch(()=>({}));
-    const abs=url=>!url?'':(url.startsWith('http')?url:BASE+url);
+    const abs=url=>!url?'':(url.startsWith('http')||url.startsWith('data:')?url:BASE+url);
 
     // ① Hero
     if(s.hero_bg){
@@ -2580,7 +2580,7 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
         if(s.card1_meta_right && spans[1]) spans[1].textContent=s.card1_meta_right;
       }
       if(s.card1_photo){
-        const a=s.card1_photo.startsWith('http')?s.card1_photo:`${window.location.origin}${s.card1_photo}`;
+        const a=abs(s.card1_photo);
         card1.style.backgroundImage=`linear-gradient(160deg,rgba(26,7,8,.55) 0%,rgba(58,14,20,.4) 100%),url(${a})`;
         card1.style.backgroundSize='cover'; card1.style.backgroundPosition='center';
       }
@@ -2589,11 +2589,11 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
     const thumb1=document.querySelector('.hero-thumb-1');
     const thumb2=document.querySelector('.hero-thumb-2');
     if(s.card2_photo && thumb1){
-      const a=s.card2_photo.startsWith('http')?s.card2_photo:`${window.location.origin}${s.card2_photo}`;
+      const a=abs(s.card2_photo);
       thumb1.style.backgroundImage=`url(${a})`; thumb1.style.backgroundSize='cover'; thumb1.style.backgroundPosition='center';
     }
     if(s.card3_photo && thumb2){
-      const a=s.card3_photo.startsWith('http')?s.card3_photo:`${window.location.origin}${s.card3_photo}`;
+      const a=abs(s.card3_photo);
       thumb2.style.backgroundImage=`url(${a})`; thumb2.style.backgroundSize='cover'; thumb2.style.backgroundPosition='center';
     }
     const stats=document.querySelectorAll('.hero-foot-block strong');

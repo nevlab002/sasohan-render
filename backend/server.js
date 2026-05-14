@@ -18,6 +18,8 @@ const app    = express();
 const server = http.createServer(app);
 const wss    = new WebSocketServer({ server, path: '/ws' });
 
+app.set('trust proxy', 1);
+
 // ── 업로드 폴더 확보 ──────────────────────
 const uploadDir = path.resolve(__dirname, process.env.UPLOAD_DIR || 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });

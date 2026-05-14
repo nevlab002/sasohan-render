@@ -2,35 +2,30 @@ const router = require('express').Router();
 const db     = require('../models/db');
 const { authMiddleware, adminOnly } = require('../middleware/auth');
 const multer = require('multer');
-const path   = require('path');
-const fs     = require('fs');
-const { v4: uuidv4 } = require('uuid');
 let sharp; try { sharp = require('sharp'); } catch { sharp = null; }
 
-async function optimizeMgrPhoto(filePath) {
-  if (!sharp) return filePath;
+async function managerPhotoToDataUrl(file) {
+  if (!file) return null;
+
   try {
-    const dir     = path.dirname(filePath);
-    const base    = path.basename(filePath, path.extname(filePath));
-    const outPath = path.join(dir, `${base}.jpg`);
-    await sharp(filePath).rotate()
+    if (!sharp) {
+      return `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    }
+
+    const buffer = await sharp(file.buffer).rotate()
       .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 90, progressive: true })
-      .toFile(outPath);
-    if (outPath !== filePath) fs.unlink(filePath, () => {});
-    return outPath;
-  } catch { return filePath; }
+      .toBuffer();
+
+    return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+  } catch {
+    return `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+  }
 }
 
-const uploadDir = path.resolve(__dirname, '..', process.env.UPLOAD_DIR || 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename:    (req, file, cb) => cb(null, `mgr_${uuidv4()}${path.extname(file.originalname).toLowerCase()}`)
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('이미지만 가능합니다.'));
@@ -54,8 +49,7 @@ router.post('/', authMiddleware, adminOnly, upload.single('photo'), async (req, 
   try {
     let photo = null;
     if (req.file) {
-      const optimized = await optimizeMgrPhoto(path.join(uploadDir, req.file.filename));
-      photo = `/uploads/${path.basename(optimized)}`;
+      photo = await managerPhotoToDataUrl(req.file);
     }
     const specialtyArr = specialty ? JSON.parse(specialty) : [];
     const { rows } = await db.query(
@@ -74,8 +68,7 @@ router.patch('/:id', authMiddleware, adminOnly, upload.single('photo'), async (r
     if (!cur.rows.length) return res.status(404).json({ error: '매니저를 찾을 수 없습니다.' });
     let photo = cur.rows[0].photo;
     if (req.file) {
-      const optimized = await optimizeMgrPhoto(path.join(uploadDir, req.file.filename));
-      photo = `/uploads/${path.basename(optimized)}`;
+      photo = await managerPhotoToDataUrl(req.file);
     }
     const specialtyArr = specialty ? JSON.parse(specialty) : cur.rows[0].specialty;
     const { rows } = await db.query(

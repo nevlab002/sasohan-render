@@ -1120,7 +1120,7 @@
   function _val(id, v) { const el=document.getElementById(id); if(el&&v!=null) el.value=v; }
   function _photo(id, url) {
     const el=document.getElementById(id); if(!el) return;
-    const abs = url && !url.startsWith('http') ? ABASE+url : url;
+    const abs = url && !url.startsWith('http') && !url.startsWith('data:') ? ABASE+url : url;
     el.innerHTML = abs
       ? `<img src="${abs}" alt="" style="width:100%;height:100%;object-fit:cover;">`
       : '<span style="color:var(--muted);font-size:11px;text-align:center;">없음</span>';
@@ -1141,7 +1141,7 @@
     wrap.innerHTML = '';
     defs.forEach(def => {
       const k = `tv_card${def.n}`;
-      const photoUrl = s[k+'_photo'] ? (s[k+'_photo'].startsWith('http') ? s[k+'_photo'] : ABASE+s[k+'_photo']) : '';
+      const photoUrl = s[k+'_photo'] ? (s[k+'_photo'].startsWith('http') || s[k+'_photo'].startsWith('data:') ? s[k+'_photo'] : ABASE+s[k+'_photo']) : '';
       const div = document.createElement('div');
       div.style.cssText = 'background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px;';
       div.innerHTML = `
@@ -1175,7 +1175,7 @@
     wrap.innerHTML = '';
     defs.forEach(def => {
       const k = def.key;
-      const photoUrl = s[k+'_photo'] ? (s[k+'_photo'].startsWith('http')?s[k+'_photo']:ABASE+s[k+'_photo']) : '';
+      const photoUrl = s[k+'_photo'] ? (s[k+'_photo'].startsWith('http') || s[k+'_photo'].startsWith('data:') ? s[k+'_photo'] : ABASE+s[k+'_photo']) : '';
       const div = document.createElement('div');
       div.style.cssText = 'background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px;';
       div.innerHTML = `
@@ -1460,7 +1460,7 @@
       if(!res.ok){if(msg){msg.style.color='#C0392B';msg.textContent=d.error||'업로드 실패';} return;}
       siteSettings[key]=d.url;
       const prevEl=document.getElementById('prev_'+key);
-      const abs=d.url.startsWith('http')?d.url:ABASE+d.url;
+      const abs=d.url.startsWith('http') || d.url.startsWith('data:') ? d.url : ABASE+d.url;
       if(prevEl) prevEl.innerHTML=`<img src="${abs}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
       if(msg){msg.style.color='#27AE60';msg.textContent='✅ 업로드됐습니다.';}
       setTimeout(()=>{if(msg)msg.textContent='';},3000);
