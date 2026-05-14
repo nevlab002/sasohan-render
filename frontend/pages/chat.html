@@ -629,6 +629,8 @@
   .ch-msg-pic {
     width: 36px; height: 36px; border-radius: 50%;
     background: linear-gradient(160deg, #C9A48F 0%, #6B4F44 50%, #2F1F1A 100%);
+    background-size: cover;
+    background-position: center top;
     flex-shrink: 0;
   }
 
@@ -1400,6 +1402,10 @@ function renderMsg(m) {
   const isMe  = m.sender_id === me?.id;
   const time  = m.created_at ? new Date(m.created_at).toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'}) : '';
   const mtype = m.msg_type || m.type || 'text';
+  const senderPhoto = !isMe ? toPhotoUrl(m.sender_photos?.[0] || partnerInfo?.partner_photo || '') : '';
+  const senderAvatar = !isMe
+    ? `<div class="ch-msg-pic" style="${senderPhoto ? `background-image:url(${senderPhoto});` : ''}"></div>`
+    : '';
   // 읽음 표시 (내 메시지만)
   // 읽음 표시: 내 메시지에만, 상대가 읽었는지 여부
   const readMark = isMe
@@ -1414,7 +1420,7 @@ function renderMsg(m) {
     const rawSrc = m.content || '';
     const src = toPhotoUrl(rawSrc);
     return `<div class="ch-msg ${isMe?'me':''}" data-msg-id="${m.id||''}">
-      ${!isMe?'<div class="ch-msg-pic"></div>':''}
+      ${senderAvatar}
       <div>
         ${readMark}
         <img src="${src}" style="max-width:200px;border-radius:8px;display:block;cursor:pointer;" onclick="window.open('${src}','_blank')" alt="사진">
@@ -1438,7 +1444,7 @@ function renderMsg(m) {
     </div>`;
   }
   return `<div class="ch-msg ${isMe?'me':''}" data-msg-id="${m.id||''}">
-    ${!isMe?'<div class="ch-msg-pic"></div>':''}
+    ${senderAvatar}
     <div>
       ${readMark}
       <div class="ch-msg-bub">${m.content||''}</div>
