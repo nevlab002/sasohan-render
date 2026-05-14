@@ -1022,6 +1022,33 @@ function applyPartnerMessageAvatars(photoUrl) {
   });
 }
 
+async function refreshChatNavBadge() {
+  try {
+    const r = await fetch(`${BASE}/api/chat/unread-count`, { headers: H });
+    if (!r.ok) return;
+    const d = await r.json().catch(() => ({}));
+    const count = Number(d.unread || 0);
+    if (typeof _setNavBadge === 'function') {
+      _setNavBadge('chat.html', count);
+    } else {
+      const nav = document.querySelector('a[href="chat.html"].snb, a[href*="chat.html"].snb');
+      if (!nav) return;
+      if (count === 0) {
+        nav.querySelector('._nb')?.remove();
+        return;
+      }
+      let badge = nav.querySelector('._nb');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = '_nb';
+        badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#C0392B;color:#fff;font-size:9px;font-weight:700;margin-left:3px;vertical-align:middle;';
+        nav.appendChild(badge);
+      }
+      badge.textContent = count > 99 ? '99+' : String(count);
+    }
+  } catch {}
+}
+
 function roomStatusLabel(status) {
   return ({
     chatting: '대화중',
@@ -1485,6 +1512,8 @@ function connectWS(rId) {
       if (msg.type === 'joined') {
         // 방 진입 완료 시 DB 기준으로 읽음 상태 즉시 동기화
         updateReadStatus();
+        updateReadStatus();
+        refreshChatNavBadge();
         return;
       }
       if (msg.type === 'notification') {
@@ -1519,6 +1548,7 @@ function connectWS(rId) {
           el.textContent = '✓ 읽음';
           el.style.color = '#27AE60';
         });
+        refreshChatNavBadge();
         return;
       }
       if (msg.type === 'typing') {
@@ -1556,6 +1586,7 @@ function connectWS(rId) {
         if (d.msg_type==='meet_propose'&&d.sender_id!==me?.id) checkProposal(activeRoomId);
         // 내 메시지 읽음 상태 갱신 (상대가 읽으면 서버에서 is_read=true)
         updateReadStatus();
+        refreshChatNavBadge();
       }
     } catch {}
   };
