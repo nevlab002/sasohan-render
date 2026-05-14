@@ -16,15 +16,25 @@ async function runMigration() {
   try {
     const exists = await pool.query("SELECT to_regclass('public.users') AS table_name");
 
-    if (exists.rows[0].table_name) {
-      console.log('Database schema already exists. Skipping migration.');
-      return;
+    if (!exists.rows[0].table_name) {
+      const schemaPath = path.join(__dirname, 'schema.sql');
+      const schema = fs.readFileSync(schemaPath, 'utf8');
+      await pool.query(schema);
+      console.log('Database schema created.');
+    } else {
+      console.log('Database schema already exists.');
     }
 
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
-    await pool.query(schema);
-    console.log('Database schema created.');
+    for (const fileName of ['migration.sql', 'migration2.sql', 'migration3.sql']) {
+      const migrationPath = path.join(__dirname, fileName);
+      if (!fs.existsSync(migrationPath)) continue;
+
+      const migration = fs.readFileSync(migrationPath, 'utf8').trim();
+      if (!migration) continue;
+
+      await pool.query(migration);
+      console.log(`${fileName} applied.`);
+    }
   } finally {
     await pool.end();
   }
