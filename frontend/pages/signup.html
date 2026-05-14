@@ -513,17 +513,11 @@ input[type=number], textarea, select { font-size: 16px !important; }
 
         <div class="su-card">
           <div class="field" style="margin-bottom:0;">
-            <label class="field-label">프로필 사진 <span style="color:var(--text-subtle);">(최대 4장)</span></label>
-            <div class="su-photo-grid">
+            <label class="field-label">대표사진</label>
+            <div class="su-photo-grid" style="grid-template-columns:minmax(180px,260px);">
               <div class="su-photo-box" id="suPhotoPreview0" onclick="document.getElementById('suPhoto0').click()">대표사진</div>
-              <div class="su-photo-box" id="suPhotoPreview1" onclick="document.getElementById('suPhoto1').click()">사진 2</div>
-              <div class="su-photo-box" id="suPhotoPreview2" onclick="document.getElementById('suPhoto2').click()">사진 3</div>
-              <div class="su-photo-box" id="suPhotoPreview3" onclick="document.getElementById('suPhoto3').click()">사진 4</div>
             </div>
             <input type="file" id="suPhoto0" accept="image/*" style="display:none">
-            <input type="file" id="suPhoto1" accept="image/*" style="display:none">
-            <input type="file" id="suPhoto2" accept="image/*" style="display:none">
-            <input type="file" id="suPhoto3" accept="image/*" style="display:none">
           </div>
         </div>
 
@@ -586,7 +580,7 @@ document.querySelectorAll('#interestChips .chip').forEach(c => {
   });
 });
 
-for (let i = 0; i < 4; i++) {
+for (let i = 0; i < 1; i++) {
   const input = document.getElementById(`suPhoto${i}`);
   const preview = document.getElementById(`suPhotoPreview${i}`);
 
@@ -618,7 +612,7 @@ function calcAgeFromBirth(dateValue) {
 }
 
 async function uploadSignupPhotos(BASE, token) {
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 1; i++) {
     const file = document.getElementById(`suPhoto${i}`)?.files?.[0];
     if (!file) continue;
 

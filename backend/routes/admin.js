@@ -278,8 +278,8 @@ router.post('/match', async (req, res) => {
   try {
     // 두 회원 모두 cami+active 확인
     const [a, b] = await Promise.all([
-      db.query("SELECT id, status FROM users WHERE id=$1 AND role='cami'", [ownerId]),
-      db.query("SELECT id, status FROM users WHERE id=$1 AND role='cami'", [visualId]),
+      db.query("SELECT u.id, u.status, p.gender FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE u.id=$1 AND u.role='cami'", [ownerId]),
+      db.query("SELECT u.id, u.status, p.gender FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE u.id=$1 AND u.role='cami'", [visualId]),
     ]);
     if (!a.rows.length) return res.status(404).json({ error: '캐미 회원 A를 찾을 수 없습니다.' });
     if (!b.rows.length) return res.status(404).json({ error: '캐미 회원 B를 찾을 수 없습니다.' });
@@ -287,6 +287,13 @@ router.post('/match', async (req, res) => {
     if (b.rows[0].status !== 'active') return res.status(400).json({ error: '캐미 회원 B가 비활성 상태입니다.' });
 
     // 이미 매칭됐는지 확인
+    if (!a.rows[0].gender || !b.rows[0].gender) {
+      return res.status(400).json({ error: '성별 정보가 있는 회원끼리만 매칭할 수 있습니다.' });
+    }
+    if (a.rows[0].gender === b.rows[0].gender) {
+      return res.status(400).json({ error: '서로 다른 성별의 회원끼리만 매칭할 수 있습니다.' });
+    }
+
     const existing = await db.query(
       `SELECT id, status FROM matches
        WHERE (owner_id=$1 AND visual_id=$2) OR (owner_id=$2 AND visual_id=$1)`,

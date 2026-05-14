@@ -15,12 +15,20 @@ router.post('/request/:targetId', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: '이용할 수 없는 계정입니다.' });
     }
 
-    const target = await db.query("SELECT role, status FROM users WHERE id=$1", [targetId]);
+    const target = await db.query("SELECT u.role, u.status, p.gender FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE u.id=$1", [targetId]);
     if (!target.rows[0] || target.rows[0].status === 'blocked') {
       return res.status(404).json({ error: '존재하지 않는 회원입니다.' });
     }
 
     // 기존 매칭 확인 (양방향)
+    const myProfile = await db.query("SELECT gender FROM profiles WHERE user_id=$1", [myId]);
+    if (!myProfile.rows[0]?.gender || !target.rows[0].gender) {
+      return res.status(400).json({ error: '성별 정보가 있는 회원끼리만 매칭을 신청할 수 있습니다.' });
+    }
+    if (myProfile.rows[0].gender === target.rows[0].gender) {
+      return res.status(400).json({ error: '서로 다른 성별의 회원에게만 매칭을 신청할 수 있습니다.' });
+    }
+
     const existing = await db.query(
       `SELECT m.id, m.status, cr.id as room_id
        FROM matches m

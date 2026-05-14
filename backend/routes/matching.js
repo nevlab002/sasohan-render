@@ -39,7 +39,10 @@ router.get('/recommend', authMiddleware, async (req, res) => {
     const filterRegionAliases = regionAliases(filterRegion);
 
     const { rows } = await db.query(`
-      WITH candidate_profiles AS (
+      WITH me_profile AS (
+        SELECT gender FROM profiles WHERE user_id = $1
+      ),
+      candidate_profiles AS (
         SELECT
           u.id,
           u.email,
@@ -66,6 +69,12 @@ router.get('/recommend', authMiddleware, async (req, res) => {
           AND u.role = 'cami'
           AND p.user_id IS NOT NULL
           AND p.name IS NOT NULL
+          AND p.gender IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+            FROM me_profile me
+            WHERE me.gender IS NOT NULL AND p.gender <> me.gender
+          )
           AND NOT EXISTS (
             SELECT 1
             FROM chat_rooms cr
