@@ -1013,6 +1013,15 @@ function toPhotoUrl(raw) {
   return raw.startsWith('http') || raw.startsWith('data:') ? raw : BASE + raw;
 }
 
+function applyPartnerMessageAvatars(photoUrl) {
+  if (!photoUrl) return;
+  document.querySelectorAll('.ch-msg:not(.me) .ch-msg-pic').forEach(pic => {
+    pic.style.backgroundImage = `url(${photoUrl})`;
+    pic.style.backgroundSize = 'cover';
+    pic.style.backgroundPosition = 'center top';
+  });
+}
+
 function roomStatusLabel(status) {
   return ({
     chatting: '대화중',
@@ -1324,6 +1333,7 @@ async function selectRoom(rId, pNameEncoded, pPhoto, pId) {
       body.innerHTML = msgs.length
         ? msgs.map(m => safeRenderMsg(m)).join('')
         : '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:13px;">아직 대화가 없습니다. 먼저 인사를 건네보세요 ✦</div>';
+      applyPartnerMessageAvatars(partnerInfo?.partner_photo);
       requestAnimationFrame(()=>{ body.scrollTop = body.scrollHeight; });
     }
 
@@ -1537,7 +1547,11 @@ function connectWS(rId) {
         const bar = document.getElementById('chTypingBar');
         if (bar) bar.style.display = 'none';
         const body = document.getElementById('chBody');
-        if (body) { body.insertAdjacentHTML('beforeend',renderMsg(d)); body.scrollTop=body.scrollHeight; }
+        if (body) {
+          body.insertAdjacentHTML('beforeend',renderMsg(d));
+          applyPartnerMessageAvatars(partnerInfo?.partner_photo);
+          body.scrollTop=body.scrollHeight;
+        }
         // 만남 제안 수신 시 팝업
         if (d.msg_type==='meet_propose'&&d.sender_id!==me?.id) checkProposal(activeRoomId);
         // 내 메시지 읽음 상태 갱신 (상대가 읽으면 서버에서 is_read=true)
