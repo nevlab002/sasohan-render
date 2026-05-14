@@ -2,6 +2,7 @@ const router  = require('express').Router();
 const db      = require('../models/db');
 const multer  = require('multer');
 const { authMiddleware, adminOnly } = require('../middleware/auth');
+let sharp; try { sharp = require('sharp'); } catch { sharp = null; }
 
 // site_settings 테이블 자동 생성
 db.query(`
@@ -14,11 +15,28 @@ db.query(`
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 3 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     file.mimetype.startsWith('image/') ? cb(null, true) : cb(new Error('이미지만 가능'));
   }
 });
+
+async function siteImageToDataUrl(file) {
+  if (!sharp) {
+    return `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+  }
+
+  try {
+    const buffer = await sharp(file.buffer).rotate()
+      .resize(1800, 1800, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 84, progressive: true })
+      .toBuffer();
+
+    return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+  } catch {
+    return `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+  }
+}
 
 // ── 설정 전체 조회 (공개) ─────────────────
 router.get('/', async (req, res) => {
@@ -65,7 +83,7 @@ router.post('/upload', authMiddleware, adminOnly, (req, res, next) => {
 }, async (req, res) => {
   if (!req.file) return res.status(400).json({ error: '파일이 없습니다.' });
   const { key } = req.body;
-  const url = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+  const url = await siteImageToDataUrl(req.file);
   try {
     if (key) {
       await db.query(
