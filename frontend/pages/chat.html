@@ -1049,6 +1049,33 @@ async function refreshChatNavBadge() {
   } catch {}
 }
 
+function setChatNavBadgeImmediate(count) {
+  const nav = document.querySelector('a[href="chat.html"].snb, a[href*="chat.html"].snb');
+  if (!nav) return;
+  if (Number(count || 0) <= 0) {
+    nav.querySelector('._nb')?.remove();
+    return;
+  }
+  let badge = nav.querySelector('._nb');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = '_nb';
+    badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#C0392B;color:#fff;font-size:9px;font-weight:700;margin-left:3px;vertical-align:middle;';
+    nav.appendChild(badge);
+  }
+  badge.textContent = count > 99 ? '99+' : String(count);
+}
+
+function clearOpenedRoomUnread(roomId) {
+  const item = document.getElementById(`room-item-${roomId}`);
+  const roomUnread = Number(item?.querySelector('.ch-item-badge')?.textContent || 0);
+  item?.querySelector('.ch-item-badge')?.remove();
+
+  const navBadge = document.querySelector('a[href="chat.html"].snb ._nb, a[href*="chat.html"].snb ._nb');
+  const navCount = Number(navBadge?.textContent || 0);
+  if (navBadge) setChatNavBadgeImmediate(Math.max(0, navCount - roomUnread));
+}
+
 function roomStatusLabel(status) {
   return ({
     chatting: '대화중',
@@ -1291,7 +1318,7 @@ async function selectRoom(rId, pNameEncoded, pPhoto, pId) {
   if (item) {
     item.classList.add('is-active');
     // 뱃지 제거 (읽음 처리)
-    item.querySelector('.ch-item-badge')?.remove();
+    clearOpenedRoomUnread(rId);
   }
   const nameEl=document.getElementById('chPartnerName');
   const picEl =document.getElementById('chHeadPic');
