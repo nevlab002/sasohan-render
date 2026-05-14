@@ -289,21 +289,24 @@ router.post('/:roomId/photo', authMiddleware, async (req, res) => {
 
       await ensureMessagePhotoColumns();
 
-      // 이미지 최적화
+      // 이미지 최적화 (GIF는 애니메이션 보존을 위해 변환 생략)
       let finalFilename = req.file.filename;
-      try {
-        const sharp = require('sharp');
-        const rawPath = path.resolve(__dirname, '..', 'uploads', req.file.filename);
-        const base    = path.basename(req.file.filename, path.extname(req.file.filename));
-        const outPath = path.resolve(__dirname, '..', 'uploads', `${base}.jpg`);
-        await sharp(rawPath)
-          .rotate()
-          .resize(1400, 1400, { fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality: 88, progressive: true })
-          .toFile(outPath);
-        if (outPath !== rawPath) fs.unlink(rawPath, () => {});
-        finalFilename = `${base}.jpg`;
-      } catch {}
+      const isGif = req.file.mimetype === 'image/gif';
+      if (!isGif) {
+        try {
+          const sharp = require('sharp');
+          const rawPath = path.resolve(__dirname, '..', 'uploads', req.file.filename);
+          const base    = path.basename(req.file.filename, path.extname(req.file.filename));
+          const outPath = path.resolve(__dirname, '..', 'uploads', `${base}.jpg`);
+          await sharp(rawPath)
+            .rotate()
+            .resize(1400, 1400, { fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 88, progressive: true })
+            .toFile(outPath);
+          if (outPath !== rawPath) fs.unlink(rawPath, () => {});
+          finalFilename = `${base}.jpg`;
+        } catch {}
+      }
 
       const url = '/uploads/' + finalFilename;
       const roomClients = activeRooms.get(roomId) || new Set();
