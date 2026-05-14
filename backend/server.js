@@ -40,7 +40,7 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '20mb' }));
 
 // ── Rate Limiting ─────────────────────────
 // 로그인/회원가입: 10분에 10회
