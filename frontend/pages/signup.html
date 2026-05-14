@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가입 · CHEMI LINE</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<style>
+  body { background: var(--ivory); }
+
+  .su-shell {
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr;
+  }
+  @media (min-width: 1000px) { .su-shell { grid-template-columns: 0.85fr 1.15fr; } }
+
+  /* ─── Side panel (editorial) ─── */
+  .su-side {
+    position: relative; overflow: hidden;
+    background: var(--bordeaux); color: var(--ivory);
+    padding: 48px 56px;
+    display: none; flex-direction: column; justify-content: space-between;
+  }
+  @media (min-width: 1000px) { .su-side { display: flex; } }
+
+  .su-side::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 30%, rgba(212,182,121,0.18), transparent 55%),
+                radial-gradient(ellipse at 20% 80%, rgba(26,7,8,0.6), transparent 60%);
+    pointer-events: none;
+  }
+
+  .su-side-top { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; }
+  .su-side-logo {
+    font-family: var(--font-display); font-size: 22px; font-weight: 500;
+    letter-spacing: 0.32em; color: var(--ivory); text-decoration: none;
+  }
+  .su-side-meta {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: rgba(245,239,230,0.55);
+  }
+
+  .su-side-mid { position: relative; z-index: 2; }
+  .su-side-eye {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--champagne); margin-bottom: 28px;
+    display: inline-flex; align-items: center; gap: 14px;
+  }
+  .su-side-eye::before { content: ''; width: 32px; height: 1px; background: var(--champagne); }
+  .su-side-h1 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 4vw, 56px); font-weight: 300;
+    line-height: 1.1; letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .su-side-h1 em { font-style: italic; color: var(--champagne); font-weight: 400; }
+  .su-side-p {
+    font-size: 14.5px; line-height: 1.85;
+    color: rgba(245,239,230,0.7); max-width: 380px;
+  }
+
+  .su-side-bottom { position: relative; z-index: 2; }
+  .su-side-quote {
+    font-family: var(--font-display); font-size: 18px;
+    font-weight: 300; font-style: italic; line-height: 1.55;
+    color: rgba(245,239,230,0.9);
+    border-left: 1px solid var(--champagne); padding-left: 20px;
+    margin-bottom: 18px;
+  }
+  .su-side-attr {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(245,239,230,0.5);
+  }
+
+  /* Decorative member chip */
+  .su-side-card {
+    position: absolute; right: -40px; top: 38%;
+    width: 240px; aspect-ratio: 3/4;
+    background: linear-gradient(160deg, #BFA189 0%, #6B4F44 50%, #2F1F1A 100%);
+    border-radius: 2px;
+    transform: rotate(6deg);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    z-index: 1;
+  }
+  .su-side-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5), transparent 50%); }
+  .su-side-card .lbl {
+    position: absolute; bottom: 18px; left: 18px; right: 18px;
+    font-family: var(--font-mono); font-size: 9.5px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(245,239,230,0.85);
+    display: flex; justify-content: space-between;
+    border-top: 1px solid rgba(212,182,121,0.4);
+    padding-top: 12px;
+  }
+
+  /* ─── Form ─── */
+  .su-main {
+    background: var(--ivory); padding: 64px 48px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  @media (max-width: 640px) { .su-main { padding: 32px 20px; } }
+
+  .su-main-wrap { width: 100%; max-width: 540px; }
+
+  .su-mobile-logo {
+    text-align: center; margin-bottom: 36px;
+    font-family: var(--font-display); font-size: 18px; font-weight: 500;
+    letter-spacing: 0.32em; color: var(--bordeaux);
+  }
+  @media (min-width: 1000px) { .su-mobile-logo { display: none; } }
+
+  /* Stepper */
+  .su-step-bar {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 56px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+  .su-step {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .su-step .num {
+    width: 26px; height: 26px; border: 1px solid var(--line);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--text-subtle);
+    transition: all 0.3s var(--ease);
+  }
+  .su-step.is-active .num { background: var(--bordeaux); border-color: var(--bordeaux); color: var(--ivory); }
+  .su-step.is-active .label { color: var(--bordeaux); }
+  .su-step.is-done .num { background: var(--champagne); border-color: var(--champagne); color: var(--ink); }
+  .su-step .label { font-size: 10px; }
+  .su-step-divider { flex: 1; height: 1px; background: var(--line); }
+
+  .su-eyebrow {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--champagne-deep); margin-bottom: 20px;
+  }
+  .su-h2 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4.5vw, 48px); font-weight: 300;
+    line-height: 1.1; letter-spacing: -0.025em;
+    color: var(--ink); margin-bottom: 16px;
+  }
+  .su-h2 em { font-style: italic; color: var(--wine); font-weight: 400; }
+  .su-h2-sub {
+    font-size: 14.5px; line-height: 1.75;
+    color: var(--text-muted); margin-bottom: 48px;
+    max-width: 460px;
+  }
+
+  /* Card panel */
+  .su-card {
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 40px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 640px) { .su-card { padding: 24px 16px; } .su-wrap { padding: 32px 16px 80px; } }
+
+  .su-row {
+    display: grid; grid-template-columns: 1fr; gap: 20px;
+    margin-bottom: 4px;
+  }
+  @media (min-width: 540px) { .su-row.row-2 { grid-template-columns: 1fr 1fr; } }
+
+  /* Gender chips */
+  .su-gender {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .su-gender label {
+    cursor: pointer; padding: 18px;
+    border: 1px solid var(--line); border-radius: var(--r-sm);
+    background: var(--paper);
+    text-align: center; transition: all 0.25s var(--ease);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .su-gender input { display: none; }
+  .su-gender label .glyph {
+    font-family: var(--font-display); font-size: 26px;
+    font-weight: 300; color: var(--text-muted);
+  }
+  .su-gender label .lbl {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .su-gender input:checked + label {
+    background: var(--bordeaux); border-color: var(--bordeaux);
+  }
+  .su-gender input:checked + label .glyph,
+  .su-gender input:checked + label .lbl { color: var(--ivory); }
+
+  /* Tag chips */
+  .su-tags { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* Helper note */
+  .su-note {
+    display: flex; gap: 14px; padding: 18px 20px;
+    background: rgba(212, 182, 121, 0.1); border: 1px solid var(--line-gold);
+    border-radius: var(--r-sm); margin-top: 24px;
+  }
+  .su-note-icon {
+    flex-shrink: 0; width: 22px; height: 22px;
+    border: 1px solid var(--champagne-deep); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-style: italic;
+    color: var(--champagne-deep); font-size: 16px;
+  }
+  .su-note p {
+    font-size: 16px; line-height: 1.7; color: var(--text-muted);
+  }
+
+  /* CTA bar */
+  .su-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    margin-top: 28px;
+  }
+  .su-back {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--text-muted); text-decoration: none;
+    background: none; border: none; cursor: pointer;
+  }
+  .su-back:hover { color: var(--bordeaux); }
+
+  .su-foot {
+    margin-top: 36px; text-align: center;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+  .su-foot a { color: var(--bordeaux); text-decoration: none; }
+
+  .su-photo-preview {
+    width: 120px;
+    height: 150px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: linear-gradient(135deg, rgba(196,122,130,.12), rgba(58,14,20,.08));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 16px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+  }
+  .su-photo-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+
+  .su-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(70px, 1fr));
+    gap: 12px;
+  }
+  @media (max-width: 480px) {
+    .su-photo-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  }
+  .su-photo-box {
+    aspect-ratio: 3/4;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: linear-gradient(135deg, rgba(196,122,130,.12), rgba(58,14,20,.08));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 16px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    text-align: center;
+    padding: 8px;
+  }
+  .range-wrap {
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .range-wrap input[type="range"] { flex:1; }
+  .range-value {
+    min-width:54px;
+    text-align:right;
+    font-family:var(--font-mono);
+    font-size:16px;
+    color:var(--champagne-deep);
+  }
+
+
+/* iOS 입력창 자동 줌 방지 */
+input[type=text], input[type=email], input[type=password],
+input[type=number], textarea, select { font-size: 16px !important; }
+  @media (max-width: 640px) {
+    .su-tags { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+    .su-card { padding: 24px 16px !important; }
+    .su-wrap { padding: 24px 16px 80px !important; }
+    input, textarea, select { font-size: 16px !important; }
+  }
+  @media (max-width: 380px) {
+    .su-tags { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="su-shell">
+  <!-- LEFT: editorial -->
+  <aside class="su-side">
+    <div class="su-side-top">
+      <a href="../index.html" class="su-side-logo">CHEMI&nbsp;LINE</a>
+      <div class="su-side-meta">CL · 002 · MMXXVI</div>
+    </div>
+
+    <div class="su-side-mid">
+      <div class="su-side-eye">Member · Onboarding</div>
+      <h1 class="su-side-h1">
+        가입과 프로필을<br>
+        <em>한 번에.</em>
+      </h1>
+      <p class="su-side-p">
+        이메일과 비밀번호를 입력하고,
+        프로필 설정과 동일한 항목을 한 화면에서 완료합니다.
+      </p>
+    </div>
+
+    <div class="su-side-bottom">
+      <p class="su-side-quote">"성급하지 않게, 그러나 정확하게. 한 사람에게 어울리는 한 사람을 짓습니다."</p>
+      <p class="su-side-attr">— 매니저 하 은 </p>
+    </div>
+
+    <div class="su-side-card">
+      <div class="lbl">
+        <span>M — 042</span>
+        <span>SS · 2026</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: form -->
+  <main class="su-main">
+    <div class="su-main-wrap">
+      <div class="su-mobile-logo">CHEMI&nbsp;LINE</div>
+
+      <!-- stepper -->
+      <div class="su-step-bar">
+        <div class="su-step is-active"><span class="num">1</span><span class="label">기본 정보</span></div>
+        <div class="su-step-divider"></div>
+        <div class="su-step"><span class="num">2</span><span class="label">취향</span></div>
+        <div class="su-step-divider"></div>
+        <div class="su-step"><span class="num">3</span><span class="label">검증</span></div>
+      </div>
+
+      <div class="su-eyebrow">Step 01 — 기본 정보</div>
+      <h2 class="su-h2">먼저, 당신을 <em>알려주세요.</em></h2>
+      <p class="su-h2-sub">이 정보는 매니저만 열람합니다. 다른 회원에게는 닉네임으로만 보여집니다.</p>
+
+      <form>
+        <div class="su-card">
+          <div class="su-row row-2">
+            <div class="field">
+              <label class="field-label">이메일 / 아이디</label>
+              <input type="email" class="input" id="suEmail" placeholder="you@email.com">
+            </div>
+            <div class="field">
+              <label class="field-label">비밀번호</label>
+              <input type="password" class="input" id="suPw" placeholder="6자 이상 입력">
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">비밀번호 확인</label>
+            <input type="password" class="input" id="suPw2" placeholder="비밀번호 재입력">
+          </div>
+        </div>
+
+        <div class="su-card">
+          <div class="su-row row-2">
+            <div class="field">
+              <label class="field-label">이름</label>
+              <input type="text" class="input" id="suName" placeholder="홍길동">
+            </div>
+            <div class="field">
+              <label class="field-label">생년월일</label>
+              <input type="date" class="input" id="suBirth">
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">성별</label>
+            <div class="su-gender">
+              <input type="radio" name="g" id="gf" checked>
+              <label for="gf"><span class="glyph">F</span><span class="lbl">Woman</span></label>
+              <input type="radio" name="g" id="gm">
+              <label for="gm"><span class="glyph">M</span><span class="lbl">Man</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="su-card">
+          <div class="su-row row-2">
+            <div class="field">
+              <label class="field-label">거주 지역</label>
+              <select class="select" id="suRegion">
+                <option value="">거주 지역 선택</option>
+                <option>서울 강남·서초</option>
+                <option>서울 마포·홍대</option>
+                <option>서울 용산·이태원</option>
+                <option>서울 기타</option>
+                <option>경기·인천</option>
+                <option>부산·경남</option>
+                <option>대구·경북</option>
+                <option>대전·충청</option>
+                <option>광주·전라</option>
+                <option>강원·제주</option>
+                <option>그 외</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">직업</label>
+              <select class="select" id="suJobSelect" onchange="handleJobSelect()">
+                <option value="">직업 선택</option>
+                <option>전문직</option>
+                <option>대기업</option>
+                <option>공무원</option>
+                <option>공기업</option>
+                <option>금융권</option>
+                <option>IT·개발</option>
+                <option>디자인·예술</option>
+                <option>마케팅·기획</option>
+                <option>교육</option>
+                <option>의료</option>
+                <option>프리랜서</option>
+                <option>자영업</option>
+                <option>사업가</option>
+                <option>학생</option>
+                <option>기타</option>
+                <option value="direct">직접 입력</option>
+              </select>
+              <input type="text" class="input" id="suJob" placeholder="직접 입력" style="display:none;margin-top:10px;">
+            </div>
+          </div>
+
+          <div class="su-row row-2">
+            <div class="field">
+              <label class="field-label">키 — <span id="heightVal" class="range-value">165cm</span></label>
+              <div class="range-wrap">
+                <input type="range" id="suHeight" min="130" max="200" value="165" oninput="document.getElementById('heightVal').textContent=this.value+'cm'">
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">몸무게 — <span id="weightVal" class="range-value">60kg</span></label>
+              <div class="range-wrap">
+                <input type="range" id="suWeight" min="40" max="120" value="60" oninput="document.getElementById('weightVal').textContent=this.value+'kg'">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="su-card">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">취향/취미 <span style="color:var(--text-subtle);">(최대 10개)</span></label>
+            <div class="su-tags" id="interestChips">
+              <span class="chip">🍷 와인·음주</span>
+              <span class="chip">☕ 카페·커피</span>
+              <span class="chip">🎵 클래식·음악</span>
+              <span class="chip">🎬 영화·OTT</span>
+              <span class="chip">🍽️ 맛집 탐방</span>
+              <span class="chip">✈️ 해외여행</span>
+              <span class="chip">🏕️ 국내여행</span>
+              <span class="chip">📚 독서·글쓰기</span>
+              <span class="chip">🎮 게임</span>
+              <span class="chip">🛍️ 쇼핑·패션</span>
+              <span class="chip">🎨 예술·전시</span>
+              <span class="chip">🏖️ 액티비티</span>
+              <span class="chip">⛳ 골프</span>
+              <span class="chip">🎾 테니스</span>
+              <span class="chip">🏋️ 헬스·운동</span>
+              <span class="chip">🧘 요가·필라테스</span>
+              <span class="chip">🚴 자전거·러닝</span>
+              <span class="chip">🍳 요리·베이킹</span>
+              <span class="chip">🎸 악기 연주</span>
+              <span class="chip">📸 사진·영상</span>
+              <span class="chip">🐾 반려동물</span>
+              <span class="chip">🌱 원예·식물</span>
+              <span class="chip">🎲 보드게임</span>
+              <span class="chip">🏊 수영·다이빙</span>
+            </div>
+          </div>
+          <div class="su-note">
+            <div class="su-note-icon">i</div>
+            <p>취향/취미는 매니저가 회원의 결을 읽는 가장 중요한 단서입니다. 프로필과 추천 매칭에 함께 반영됩니다.</p>
+          </div>
+        </div>
+
+        <div class="su-card">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">자기소개</label>
+            <textarea class="input" id="suBio" rows="6" style="resize:none;" placeholder="나를 표현하는 한 문장을 적어주세요. 취향, 성격, 찾는 인연에 대해 솔직하게 쓸수록 좋은 만남으로 이어집니다."></textarea>
+          </div>
+        </div>
+
+        <div class="su-card">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">프로필 사진 <span style="color:var(--text-subtle);">(최대 4장)</span></label>
+            <div class="su-photo-grid">
+              <div class="su-photo-box" id="suPhotoPreview0" onclick="document.getElementById('suPhoto0').click()">대표사진</div>
+              <div class="su-photo-box" id="suPhotoPreview1" onclick="document.getElementById('suPhoto1').click()">사진 2</div>
+              <div class="su-photo-box" id="suPhotoPreview2" onclick="document.getElementById('suPhoto2').click()">사진 3</div>
+              <div class="su-photo-box" id="suPhotoPreview3" onclick="document.getElementById('suPhoto3').click()">사진 4</div>
+            </div>
+            <input type="file" id="suPhoto0" accept="image/*" style="display:none">
+            <input type="file" id="suPhoto1" accept="image/*" style="display:none">
+            <input type="file" id="suPhoto2" accept="image/*" style="display:none">
+            <input type="file" id="suPhoto3" accept="image/*" style="display:none">
+          </div>
+        </div>
+
+        <div class="su-actions">
+          <a href="../index.html" class="su-back">← 돌아가기</a>
+          <div id="suErr" style="color:var(--danger);font-size:16px;margin-bottom:10px;min-height:18px;"></div>
+          <button type="button" class="btn btn-primary" id="suBtn" onclick="doSignup()">가입 완료하기
+            <svg width="14" height="10" viewBox="0 0 16 12" fill="none"><path d="M1 6h14m0 0L10 1m5 5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </form>
+
+      <p class="su-foot">이미 회원이신가요? <a href="login.html">로그인</a></p>
+    </div>
+  </main>
+</div>
+
+<script>
+</script>
+<script src="../assets/api.js"></script>
+<script>
+let selectedGender = 'female';
+
+function handleJobSelect() {
+  const select = document.getElementById('suJobSelect');
+  const input = document.getElementById('suJob');
+
+  if (!select || !input) return;
+
+  if (select.value === 'direct') {
+    input.style.display = 'block';
+    input.value = '';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = select.value || '';
+  }
+}
+
+function updateGender() {
+  const male = document.getElementById('gm');
+  selectedGender = male?.checked ? 'male' : 'female';
+}
+
+document.querySelectorAll('input[name="g"]').forEach(r => {
+  r.addEventListener('change', updateGender);
+});
+updateGender();
+
+document.querySelectorAll('#interestChips .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    const selected = document.querySelectorAll('#interestChips .chip.selected').length;
+
+    if (!c.classList.contains('selected') && selected >= 10) {
+      alert('취향/취미는 최대 10개까지 선택할 수 있습니다.');
+      return;
+    }
+
+    c.classList.toggle('selected');
+  });
+});
+
+for (let i = 0; i < 4; i++) {
+  const input = document.getElementById(`suPhoto${i}`);
+  const preview = document.getElementById(`suPhotoPreview${i}`);
+
+  if (input && preview) {
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      preview.textContent = '';
+      preview.style.backgroundImage = `url(${url})`;
+    });
+  }
+}
+
+function calcAgeFromBirth(dateValue) {
+  if (!dateValue) return null;
+
+  const birth = new Date(dateValue);
+  if (Number.isNaN(birth.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+
+  return age > 0 ? age : null;
+}
+
+async function uploadSignupPhotos(BASE, token) {
+  for (let i = 0; i < 4; i++) {
+    const file = document.getElementById(`suPhoto${i}`)?.files?.[0];
+    if (!file) continue;
+
+    const form = new FormData();
+    form.append('photo', file);
+    form.append('slot', String(i));
+
+    const res = await fetch(`${BASE}/api/profiles/photos/${i}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data.error || `사진 ${i + 1} 업로드 실패`);
+    }
+  }
+}
+
+async function doSignup() {
+  const btn = document.getElementById('suBtn');
+  const err = document.getElementById('suErr');
+
+  const email = document.getElementById('suEmail')?.value.trim();
+  const pw = document.getElementById('suPw')?.value;
+  const pw2 = document.getElementById('suPw2')?.value;
+
+  const name = document.getElementById('suName')?.value.trim();
+  const birthInput = document.getElementById('suBirth')?.value;
+  const age = calcAgeFromBirth(birthInput);
+  const region = document.getElementById('suRegion')?.value || '';
+  const jobSelect = document.getElementById('suJobSelect')?.value || '';
+  const jobInput = document.getElementById('suJob')?.value.trim() || '';
+  const job = jobSelect === 'direct' ? jobInput : (jobInput || jobSelect);
+  const height = parseInt(document.getElementById('suHeight')?.value, 10) || null;
+  const weight = parseInt(document.getElementById('suWeight')?.value, 10) || null;
+  const bio = document.getElementById('suBio')?.value.trim() || '';
+
+  const interests = [...document.querySelectorAll('#interestChips .chip.selected')]
+    .map(c => c.textContent.trim())
+    .filter(Boolean);
+
+  if (!email || !pw) {
+    err.textContent = '이메일과 비밀번호를 입력해주세요.';
+    return;
+  }
+
+  if (pw.length < 6) {
+    err.textContent = '비밀번호는 6자 이상이어야 합니다.';
+    return;
+  }
+
+  if (pw2 && pw !== pw2) {
+    err.textContent = '비밀번호가 일치하지 않습니다.';
+    return;
+  }
+
+  if (!name) {
+    err.textContent = '이름을 입력해주세요.';
+    return;
+  }
+
+  if (!age) {
+    err.textContent = '생년월일을 입력해주세요.';
+    return;
+  }
+
+  if (!region) {
+    err.textContent = '거주 지역을 선택해주세요.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '가입 및 프로필 저장 중…';
+  err.textContent = '';
+
+  try {
+    const BASE = window.location.origin;
+
+    const res = await fetch(`${BASE}/api/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password: pw,
+        name,
+        age,
+        gender: selectedGender,
+        region,
+        job,
+        height,
+        weight,
+        bio,
+        taste: interests,
+        hobby: [],
+        interests
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      err.textContent = data.error || data.errors?.[0]?.msg || '가입 실패';
+      return;
+    }
+
+    if (!data.token) {
+      err.textContent = '가입은 되었지만 자동 로그인이 되지 않았습니다. 로그인 후 확인해주세요.';
+      return;
+    }
+
+    localStorage.setItem('ss_token', data.token);
+    localStorage.setItem('ss_user', JSON.stringify(data.user));
+
+    try {
+      await uploadSignupPhotos(BASE, data.token);
+    } catch (photoErr) {
+      err.textContent = `프로필은 저장됐지만 ${photoErr.message}. 프로필 페이지에서 다시 수정해주세요.`;
+      setTimeout(() => window.location.replace(`${BASE}/pages/profile.html`), 1500);
+      return;
+    }
+
+    window.location.replace(`${BASE}/pages/profile.html`);
+  } catch (e) {
+    console.error(e);
+    err.textContent = '서버에 연결할 수 없습니다.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '가입 완료하기 →';
+  }
+}
+</script>
+</body>
+</html>

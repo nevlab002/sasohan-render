@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>매칭 · CHEMI LINE</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<style>
+  body { background: var(--ivory); }
+
+  /* ── Match page nav context ── */
+  .site-nav.match-nav {
+    height: 64px;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    gap: 12px;
+  }
+  .match-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+  }
+  .match-nav-current {
+    padding-left: 14px;
+    border-left: 1px solid var(--line);
+    min-width: 0;
+  }
+  .match-nav-current strong {
+    display: block;
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .match-nav-current small {
+    display: none;
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .match-nav .snb.active {
+    background: var(--bordeaux);
+    color: var(--ivory);
+  }
+
+  /* ── Page header ── */
+  .mt-head {
+    max-width: 100%; margin: 0 auto;
+    padding: 64px 48px 40px; box-sizing: border-box;
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: end;
+  }
+  @media (min-width: 880px) { .mt-head { grid-template-columns: 1.2fr 1fr; } }
+
+  .mt-eye {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--champagne-deep); margin-bottom: 22px;
+    display: inline-flex; align-items: center; gap: 14px;
+  }
+  .mt-eye::before { content: ''; width: 32px; height: 1px; background: var(--champagne-deep); }
+
+  .mt-h1 {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 5.5vw, 76px); font-weight: 300;
+    line-height: 1.05; letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .mt-h1 em { font-style: italic; color: var(--wine); font-weight: 400; }
+
+  .mt-side {
+    display: flex; flex-direction: column; gap: 14px;
+    align-items: flex-start;
+  }
+  @media (min-width: 880px) { .mt-side { align-items: flex-end; } }
+  .mt-side p {
+    font-size: 14.5px; line-height: 1.8;
+    color: var(--text-muted); max-width: 380px;
+  }
+  .mt-meta {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--text-subtle);
+    display: flex; gap: 24px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    width: 100%;
+  }
+  .mt-meta b { color: var(--bordeaux); font-weight: 500; }
+
+  .mt-quick-guide {
+    margin: 0 48px 28px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    background: rgba(255,255,255,.42);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+  .mt-quick-guide div {
+    min-height: 58px;
+    padding: 0 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 1px solid var(--line);
+  }
+  .mt-quick-guide div:first-child { border-left: 0; }
+  .mt-quick-guide b {
+    display: block;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+  .mt-quick-guide span {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+
+  /* ── Filter bar ── */
+  .mt-filter {
+    max-width: 100%;
+    margin: 0 auto 40px;
+    padding: 0 48px; box-sizing: border-box;
+    display: grid;
+    gap: 14px;
+  }
+  .mt-filter-group {
+    background: rgba(255,255,255,.38);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  .mt-filter-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--champagne-deep);
+    padding-top: 9px;
+    white-space: nowrap;
+  }
+  .mt-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .mt-filter .chip {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  @media (max-width: 640px) {
+    .site-nav.match-nav {
+      flex-direction: row;
+      align-items: center;
+      min-height: 0;
+      height: 52px;
+      padding: 0 12px;
+      gap: 8px;
+    }
+    .match-nav-brand {
+      width: auto;
+      justify-content: flex-start;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .match-nav-current {
+      display: none;
+    }
+    .site-nav.match-nav .site-nav-links {
+      width: auto;
+      gap: 2px;
+      justify-content: flex-end;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .site-nav.match-nav .site-nav-links::-webkit-scrollbar { display: none; }
+    .mt-filter {
+      padding: 0 16px;
+      margin-bottom: 28px;
+      gap: 10px;
+    }
+    .mt-filter-group {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 14px;
+    }
+    .mt-filter-label {
+      padding-top: 0;
+      font-size: 10px;
+    }
+    .mt-filter-chips {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
+    .mt-filter .chip {
+      flex-shrink: 0;
+      min-height: 38px;
+      font-size: 12px;
+    }
+    .mt-quick-guide {
+      margin: 0 16px 22px;
+      grid-template-columns: 1fr;
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .mt-quick-guide div {
+      min-height: 54px;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+      padding: 12px 14px;
+    }
+    .mt-quick-guide div:first-child { border-top: 0; }
+  }
+
+  /* ── Today's pick (hero) ── */
+  .mt-today {
+    max-width: 100%; margin: 48px auto;
+    padding: 0 48px; box-sizing: border-box;
+  }
+  .mt-today-tag {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--champagne-deep); margin-bottom: 18px;
+    display: inline-flex; align-items: center; gap: 14px;
+  }
+  .mt-today-tag::before { content: ''; width: 32px; height: 1px; background: var(--champagne-deep); }
+
+  .mt-today-card {
+    display: grid; grid-template-columns: 1fr; gap: 0;
+    background: var(--ink); color: var(--ivory);
+    border-radius: 4px;
+    /* overflow:hidden 대신 isolation으로 border-radius 적용 — 삼성 인터넷 클리핑 버그 방지 */
+    isolation: isolate;
+    -webkit-transform: translateZ(0); transform: translateZ(0);
+  }
+  @media (min-width: 880px) { .mt-today-card { grid-template-columns: 1fr 1.2fr; } }
+
+  .mt-today-img {
+    aspect-ratio: 4/5; min-height: 480px;
+    background: linear-gradient(160deg, #C9A48F 0%, #6B4F44 50%, #2F1F1A 100%);
+    background-size: cover;
+    background-position: center top;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: smooth;
+    border-radius: 4px 0 0 4px; /* 첫 셀 왼쪽만 둥글게 — overflow 없이 직접 적용 */
+    position: relative;
+  }
+  .mt-today-img::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5), transparent 55%); }
+  .mt-today-img .corner-tl {
+    position: absolute; top: 24px; left: 24px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.28em; color: var(--champagne); text-transform: uppercase;
+  }
+  .mt-today-img .corner-tr {
+    position: absolute; top: 24px; right: 24px;
+    font-family: var(--font-display); font-size: 14px;
+    color: rgba(245,239,230,0.85); font-style: italic;
+  }
+  .mt-today-img .num {
+    position: absolute; bottom: 24px; right: 26px;
+    font-family: var(--font-display); font-size: 88px; font-weight: 300;
+    color: rgba(245,239,230,0.12); line-height: 1; letter-spacing: -0.03em;
+  }
+
+  .mt-today-body {
+    padding: 56px; display: flex; flex-direction: column;
+    justify-content: center; gap: 28px;
+    background: linear-gradient(155deg, #4D1620 0%, #2A0B11 100%);
+    border-radius: 0 4px 4px 0; /* 오른쪽 셀 오른쪽만 둥글게 */
+  }
+  @media (max-width: 640px) { .mt-today-body { padding: 32px; } }
+
+  .mt-today-no {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.3em; color: var(--champagne); text-transform: uppercase;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .mt-today-no::before { content: ''; width: 32px; height: 1px; background: var(--champagne); }
+
+  .mt-today-name {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 5vw, 64px); font-weight: 300;
+    line-height: 1; letter-spacing: -0.02em;
+  }
+  .mt-today-name em { font-style: italic; color: var(--champagne); font-weight: 400; }
+
+  .mt-today-meta-row {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(245,239,230,0.6);
+  }
+
+  .mt-today-table {
+    border-top: 1px solid rgba(212,182,121,0.2);
+  }
+  .mt-today-table > div {
+    display: grid; grid-template-columns: 110px 1fr;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(212,182,121,0.12);
+  }
+  .mt-today-table .k {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(245,239,230,0.5);
+  }
+  .mt-today-table .v { font-size: 14px; line-height: 1.6; color: var(--ivory); }
+
+  .mt-today-quote {
+    font-family: var(--font-display); font-size: 18px;
+    font-weight: 300; font-style: italic; line-height: 1.6;
+    color: rgba(245,239,230,0.9);
+    border-left: 1px solid var(--champagne); padding-left: 20px;
+  }
+
+  .mt-today-actions {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    padding-top: 8px;
+  }
+  .mt-today-actions .btn-primary { background: var(--champagne); color: var(--ink); border-color: var(--champagne); }
+  .mt-today-actions .btn-primary:hover { background: var(--ivory); border-color: var(--ivory); }
+  .mt-today-actions .btn-ghost { color: rgba(245,239,230,0.75); border-color: rgba(245,239,230,0.25); }
+  .mt-today-actions .btn-ghost:hover { color: var(--ivory); border-color: var(--ivory); background: rgba(245,239,230,0.04); }
+
+
+  /* ── Chemi couples section ── */
+  .chemi-section {
+    max-width: 100%;
+    margin: 0 auto 72px;
+    padding: 0 48px; box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  .chemi-section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 22px;
+  }
+  .chemi-section-head h2 {
+    font-family: var(--font-display);
+    font-size: clamp(28px,4vw,44px);
+    font-weight: 300;
+    line-height: 1.1;
+  }
+  .chemi-section-head h2 em {
+    font-style: italic;
+    color: var(--wine);
+  }
+  .chemi-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .32em;
+    text-transform: uppercase;
+    color: var(--champagne-deep);
+    margin-bottom: 8px;
+  }
+  .chemi-month {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .chemi-top-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+  }
+  @media (max-width: 900px) {
+    .chemi-top-grid { grid-template-columns: 1fr; }
+    .chemi-section-head { align-items: flex-start; flex-direction: column; }
+  }
+  @media (max-width: 640px) {
+    .chemi-section { padding: 0 16px; margin-bottom: 52px; }
+  }
+
+  /* ── Grid section ── */
+  .mt-section-head {
+    max-width: 100%; margin: 80px auto 32px;
+    padding: 0 48px; box-sizing: border-box;
+    display: flex; justify-content: space-between; align-items: end;
+    border-bottom: 1px solid var(--line); padding-bottom: 24px;
+  }
+  .mt-section-head h2 {
+    font-family: var(--font-display); font-size: 32px;
+    font-weight: 400; letter-spacing: -0.02em;
+  }
+  .mt-section-head h2 em { font-style: italic; color: var(--wine); }
+  .mt-sort {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .mt-sort select {
+    background: transparent; border: none; color: var(--bordeaux);
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin-left: 6px; cursor: pointer; outline: none;
+  }
+
+  .mt-grid {
+    max-width: 100%; margin: 0 auto 100px;
+    padding: 0 48px; box-sizing: border-box;
+    display: grid; gap: 32px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) { .mt-grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1000px) { .mt-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .mt-card {
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: var(--r-md); overflow: hidden;
+    transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), border-color 0.4s var(--ease);
+    display: flex; flex-direction: column;
+    text-decoration: none; color: inherit;
+  }
+  .mt-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--champagne); }
+
+  .mt-card-img {
+    aspect-ratio: 4/5; position: relative;
+    background-size: cover;
+    background-position: center top;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: smooth;
+  }
+  .mt-card-img::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.4), transparent 55%); }
+  .mt-card-img .tl {
+    position: absolute; top: 16px; left: 16px;
+    font-family: var(--font-mono); font-size: 9.5px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--champagne);
+  }
+  .mt-card-img .tr {
+    position: absolute; top: 16px; right: 16px;
+    padding: 4px 10px;
+    background: rgba(212,182,121,0.18); border: 1px solid rgba(212,182,121,0.4);
+    border-radius: var(--r-pill);
+    font-family: var(--font-mono); font-size: 9.5px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--champagne);
+  }
+  .mt-card-img .bl {
+    position: absolute; bottom: 16px; left: 16px;
+    font-family: var(--font-display); font-size: 13px;
+    color: rgba(245,239,230,0.85); font-style: italic;
+  }
+
+  .mt-card-body { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .mt-card-no {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--champagne-deep);
+  }
+  .mt-card-name {
+    font-family: var(--font-display); font-size: 28px;
+    font-weight: 400; letter-spacing: -0.015em; line-height: 1; color: var(--ink);
+  }
+  .mt-card-name em { font-style: italic; color: var(--wine); }
+  .mt-card-name .age { color: var(--text-muted); font-weight: 300; }
+  .mt-card-meta {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .mt-card-bio {
+    font-size: 13.5px; line-height: 1.7; color: var(--text-muted);
+    flex: 1;
+  }
+  .mt-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mt-card-tags .t {
+    padding: 4px 10px; border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    font-size: 11.5px; color: var(--text-muted);
+  }
+  .mt-card-foot {
+    padding-top: 14px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .mt-card-foot .ratio {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-subtle);
+  }
+  .mt-card-foot .ratio b { color: var(--bordeaux); font-family: var(--font-display); font-size: 16px; font-style: italic; font-weight: 400; }
+  .mt-card-foot .arrow {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--line); display: flex; align-items: center; justify-content: center;
+    color: var(--bordeaux); transition: all 0.25s;
+  }
+  .mt-card:hover .mt-card-foot .arrow { background: var(--bordeaux); color: var(--ivory); border-color: var(--bordeaux); transform: translateX(4px); }
+
+  .mt-pag {
+    text-align: center; padding-bottom: 80px;
+  }
+  .mt-pag .btn-outline { padding: 14px 36px; }
+
+  /* ── 소개팅 신청 상태 ── */
+  .match-status-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    background: var(--ink); color: var(--ivory);
+    padding: 0; max-height: 0; overflow: hidden;
+    transition: max-height .4s ease, padding .4s ease;
+  }
+  .match-status-bar.open { max-height: 300px; padding: 20px 24px 24px; }
+  .ms-status-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,.08);
+  }
+  .ms-status-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .ms-status-dot.pending  { background: #E67E22; }
+  .ms-status-dot.review   { background: #3498DB; animation: pulse 1.5s infinite; }
+  .ms-status-dot.waiting  { background: #9B59B6; animation: pulse 1.5s infinite; }
+  .ms-status-dot.accepted { background: #27AE60; }
+  .ms-status-dot.rejected { background: #C0392B; }
+  .ms-status-dot.expired  { background: #7F8C8D; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ── 모바일 nav: tokens.css에서 처리 ── */
+  .chip.on {
+    background: var(--bordeaux);
+    color: var(--ivory);
+    border-color: var(--bordeaux);
+  }
+
+  /* ══ 모바일 (통합) ══ */
+  @media (max-width: 640px) {
+    :root { --modal-blur: none; } /* 모바일 GPU 부하 방지 */
+    /* 전체 컨테이너 */
+    .mt-wrap { padding: 16px 16px 80px !important; }
+
+    /* 헤더/섹션 패딩 */
+    .mt-head, .mt-section-head { padding-left: 0 !important; padding-right: 0 !important; }
+    .mt-head { grid-template-columns: 1fr !important; }
+    .mt-grid { padding: 0 !important; }
+    .mt-filter { padding: 12px 0 !important; }
+
+    /* TODAY PICK — 모바일 세로 인물사진 최적화 */
+    .mt-today { padding: 0 !important; }
+    .mt-today-card { grid-template-columns: 1fr !important; }
+    .mt-today-img {
+      /* aspect-ratio 대신 명시적 height — 삼성 인터넷 호환 + 세로 사진 잘 보임 */
+      height: 115vw !important;
+      min-height: 280px !important;
+      max-height: 480px !important;
+      aspect-ratio: unset !important;
+      border-radius: 4px 4px 0 0 !important;
+    }
+    .mt-today-body { padding: 24px 20px !important; }
+
+    /* 소개팅 신청 버튼 - 모바일 하단 고정 */
+    .modal-actions-mobile {
+      position: sticky; bottom: 0; background: var(--paper);
+      padding: 16px; margin: 0 -32px -40px; border-top: 1px solid var(--line);
+    }
+
+    /* 카드 그리드 1열 */
+    .mt-card-img { aspect-ratio: 3/4; }
+    .mt-grid { grid-template-columns: 1fr !important; }
+
+    /* 캐미 커플 1열 */
+    .chemi-top-grid { grid-template-columns: 1fr !important; }
+    .chemi-section { padding: 0 !important; }
+
+    /* 터치 타깃 */
+    .btn { min-height: 44px !important; }
+    .chip { min-height: 36px; }
+
+    /* fixed 버튼 위치 */
+    #statusFloatBtn { bottom: 80px !important; right: 16px !important; }
+
+    /* 폰트 최소 크기 */
+    .mt-card-no, .mt-card-meta { font-size: 11px !important; }
+  }
+
+  @media (min-width: 480px) and (max-width: 640px) {
+    /* 480~640px: 카드 2열 */
+    .mt-grid { grid-template-columns: 1fr 1fr !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav match-nav">
+  <div class="match-nav-brand">
+    <a href="../index.html" class="site-logo">CHEMI&nbsp;LINE</a>
+    <div class="match-nav-current">
+      <strong>회원 둘러보기</strong>
+      <small>프로필 확인 · 좋아요 · 소개팅 신청</small>
+    </div>
+  </div>
+  <div class="site-nav-links">
+    <a href="match.html" class="snb active">매칭</a>
+    <a href="chat.html" class="snb">채팅</a>
+    <a href="profile.html" class="snb">프로필</a>
+    <a href="inquiry.html" class="snb">문의</a>
+    <button class="snb logout" onclick="logout()">로그아웃</button>
+  </div>
+</nav>
+
+<header class="mt-head">
+  <div>
+    <div class="mt-eye">Curated · This Week</div>
+    <h1 class="mt-h1">이번 주, <em>당신을 위한</em><br>인연을 모았습니다.</h1>
+  </div>
+  <div class="mt-side">
+    <p>매니저가 직접 큐레이션한 회원입니다. 결의 합이 높은 순으로 정렬됩니다.</p>
+    <div class="mt-meta">
+      <span>Curated · <b>14</b></span>
+      <span>New · <b>3</b></span>
+      <span>Updated · 2h ago</span>
+    </div>
+  </div>
+</header>
+
+<section class="mt-quick-guide" aria-label="매칭 페이지 이용 안내">
+  <div><b>1. 회원을 둘러보세요</b><span>취향, 취미, 지역으로 소개 가능한 회원을 좁혀볼 수 있어요.</span></div>
+  <div><b>2. 마음에 들면 좋아요</b><span>관심 있는 회원은 좋아요로 표시하고 나중에 다시 확인하세요.</span></div>
+  <div><b>3. 소개팅을 신청하세요</b><span>프로필에서 신청하면 매니저가 검토 후 매칭을 진행합니다.</span></div>
+</section>
+
+<div class="mt-filter" id="mtFilter">
+  <div class="mt-filter-group">
+    <span class="mt-filter-label">전체</span>
+    <div class="mt-filter-chips">
+      <button type="button" class="chip all-chip on" data-filter-all="all" onclick="setAllFilters(this)">전체 보기</button>
+    </div>
+  </div>
+
+  <div class="mt-filter-group">
+    <span class="mt-filter-label">취향</span>
+    <div class="mt-filter-chips">
+      <button type="button" class="chip taste-chip on" data-filter-all="taste" onclick="setTasteAll(this)">전체</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🍷 와인·음주</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">☕ 카페·커피</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🎵 클래식·음악</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🎬 영화·OTT</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🍽️ 맛집 탐방</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">✈️ 해외여행</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🏕️ 국내여행</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">📚 독서·글쓰기</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🎮 게임</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🛍️ 쇼핑·패션</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🎨 예술·전시</button>
+      <button type="button" class="chip taste-chip" onclick="toggleTasteFilter(this)">🏖️ 액티비티</button>
+    </div>
+  </div>
+
+  <div class="mt-filter-group">
+    <span class="mt-filter-label">취미</span>
+    <div class="mt-filter-chips">
+      <button type="button" class="chip hobby-chip on" data-filter-all="hobby" onclick="setHobbyAll(this)">전체</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">⛳ 골프</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🎾 테니스</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🏋️ 헬스·운동</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🧘 요가·필라테스</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🚴 자전거·러닝</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🍳 요리·베이킹</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🎸 악기 연주</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">📸 사진·영상</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🐾 반려동물</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🌱 원예·식물</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🎲 보드게임</button>
+      <button type="button" class="chip hobby-chip" onclick="toggleHobbyFilter(this)">🏊 수영·다이빙</button>
+    </div>
+  </div>
+
+  <div class="mt-filter-group">
+    <span class="mt-filter-label">지역</span>
+    <div class="mt-filter-chips">
+      <button type="button" class="chip region-chip on" data-filter-all="region" onclick="setRegionAll(this)">전체</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">서울 강남·서초</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">서울 마포·홍대</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">서울 용산·이태원</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">서울 기타</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">경기·인천</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">부산·경남</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">대구·경북</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">대전·충청</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">광주·전라</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">강원·제주</button>
+      <button type="button" class="chip region-chip" onclick="toggleRegionFilter(this)">그 외</button>
+    </div>
+  </div>
+</div>
+
+<!-- Today's pick -->
+<section class="mt-today">
+  <div class="mt-today-tag">Today's Pick</div>
+  <article class="mt-today-card" id="todayCard" style="display:none;">
+    <div class="mt-today-img" id="todayImg">
+      <span class="corner-tl">M — 001</span>
+      <span class="corner-tr" id="todayRegion"></span>
+      <span class="num">№ 01</span>
+    </div>
+    <div class="mt-today-body">
+      <div class="mt-today-no" id="todayNo">Today's Pick</div>
+      <h2 class="mt-today-name" id="todayName">—</h2>
+      <div class="mt-today-meta-row" id="todayMeta"></div>
+      <div class="mt-today-table" id="todayTable"></div>
+      <p class="mt-today-quote" id="todayQuote"></p>
+      <div class="mt-today-actions" id="todayActions"></div>
+    </div>
+  </article>
+  <div id="todayEmpty" style="text-align:center;padding:60px;color:rgba(245,239,230,.4);font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;">아직 이달의 픽이 없습니다</div>
+</section>
+
+
+<!-- ─ 이달의 캐미커플 ─ -->
+<section id="chemiCouples" class="chemi-section">
+  <div class="chemi-section-head">
+    <div>
+      <div class="chemi-eyebrow">CHEMI LINE · 이달의 캐미커플</div>
+      <h2>마음이 <em>통한</em> 커플</h2>
+    </div>
+    <div class="chemi-month" id="chemiMonth"></div>
+  </div>
+  <div id="chemiTopList" class="chemi-top-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text-muted);font-size:13px;">불러오는 중...</div>
+  </div>
+</section>
+
+<!-- Grid section -->
+<div class="mt-section-head">
+  <h2>캐미 회원 <em>둘러보기</em></h2>
+  <div id="mtCount" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);"></div>
+</div>
+
+<section class="mt-grid" id="cardGrid">
+  <div style="grid-column:1/-1;padding:80px 0;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;">Loading…</div>
+</section>
+
+<script src="../assets/api.js"></script>
+<script>
+// ── 초기 인증 ─────────────────────────────
+const _token = localStorage.getItem('ss_token');
+const _user  = (() => { try { return JSON.parse(localStorage.getItem('ss_user')); } catch { return null; } })();
+if (!_token || !_user) { window.location.href = window.location.origin; }
+
+const BASE = window.location.origin;
+const H    = { Authorization: `Bearer ${_token}` };
+const me   = _user;
+
+let members = [], myLikes = new Set(), currentMember = null;
+let filters  = { taste: [], hobby: [], region: '' };
+
+function stripEmojiAndSpace(value) {
+  return String(value || '')
+    .replace(/[🍷☕🎵🎬🍽️✈️🏕️📚🎮🛍️🎨🏖️⛳🎾🏋️🧘🚴🍳🎸📸🐾🌱🎲🏊]/g, '')
+    .replace(/\s+/g, '')
+    .trim();
+}
+
+function normalizeFilterList(value) {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value.map(stripEmojiAndSpace).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    const v = value.trim();
+
+    try {
+      const parsed = JSON.parse(v);
+      if (Array.isArray(parsed)) return parsed.map(stripEmojiAndSpace).filter(Boolean);
+    } catch {}
+
+    if (v.startsWith('{') && v.endsWith('}')) {
+      return v.slice(1, -1).split(',').map(stripEmojiAndSpace).filter(Boolean);
+    }
+
+    return v.split(',').map(stripEmojiAndSpace).filter(Boolean);
+  }
+
+  return [];
+}
+
+function regionAliases(region) {
+  const r = String(region || '').trim();
+
+  const map = {
+    '서울 강남·서초': ['서울 강남·서초', '강남', '서초'],
+    '서울 마포·홍대': ['서울 마포·홍대', '마포', '홍대'],
+    '서울 용산·이태원': ['서울 용산·이태원', '용산', '이태원'],
+    '서울 기타': ['서울 기타', '서울'],
+    '경기·인천': ['경기·인천', '경기', '인천'],
+    '부산·경남': ['부산·경남', '부산', '경남'],
+    '대구·경북': ['대구·경북', '대구', '경북'],
+    '대전·충청': ['대전·충청', '대전', '충북', '충남', '충청'],
+    '광주·전라': ['광주·전라', '광주', '전북', '전남', '전라'],
+    '강원·제주': ['강원·제주', '강원', '제주'],
+    '그 외': ['그 외', '기타', '해외']
+  };
+
+  return map[r] || (r ? [r] : []);
+}
+
+function normalizeRegion(value) {
+  return String(value || '').replace(/\s+/g, '').trim();
+}
+
+function regionMatchesFilter(memberRegion, selectedRegion) {
+  if (!selectedRegion) return true;
+
+  const member = normalizeRegion(memberRegion);
+  if (!member) return false;
+
+  const aliases = regionAliases(selectedRegion).map(normalizeRegion).filter(Boolean);
+
+  return aliases.some(alias => member === alias || member.includes(alias));
+}
+
+function memberMatchesCurrentFilters(member) {
+  const memberRegion = member?.region || '';
+
+  const memberAll = [...new Set([
+    ...normalizeFilterList(member?.taste),
+    ...normalizeFilterList(member?.hobby),
+    ...normalizeFilterList(member?.interests)
+  ])];
+
+  const selectedTaste = (filters.taste || []).map(stripEmojiAndSpace).filter(Boolean);
+  const selectedHobby = (filters.hobby || []).map(stripEmojiAndSpace).filter(Boolean);
+
+  if (!regionMatchesFilter(memberRegion, filters.region)) return false;
+
+  if (selectedTaste.length && !selectedTaste.some(v => memberAll.includes(v))) return false;
+
+  if (selectedHobby.length && !selectedHobby.some(v => memberAll.includes(v))) return false;
+
+  return true;
+}
+
+// ── 필터 ───────────────────────────────────
+function updateAllChipState() {
+  const all = document.querySelector('[data-filter-all="all"]');
+  if (!all) return;
+
+  const isAll = !filters.region && !filters.taste.length && !filters.hobby.length;
+  all.classList.toggle('on', isAll);
+}
+
+function setAllFilters(el) {
+  filters = { taste: [], hobby: [], region: '' };
+
+  document.querySelectorAll('.taste-chip,.hobby-chip,.region-chip,.all-chip').forEach(b => b.classList.remove('on'));
+  document.querySelector('[data-filter-all="taste"]')?.classList.add('on');
+  document.querySelector('[data-filter-all="hobby"]')?.classList.add('on');
+  document.querySelector('[data-filter-all="region"]')?.classList.add('on');
+  el?.classList.add('on');
+
+  loadMembers();
+}
+
+function setTasteAll(el) {
+  filters.taste = [];
+  document.querySelectorAll('.taste-chip').forEach(b => b.classList.remove('on'));
+  el?.classList.add('on');
+  updateAllChipState();
+  loadMembers();
+}
+
+function setHobbyAll(el) {
+  filters.hobby = [];
+  document.querySelectorAll('.hobby-chip').forEach(b => b.classList.remove('on'));
+  el?.classList.add('on');
+  updateAllChipState();
+  loadMembers();
+}
+
+function setRegionAll(el) {
+  filters.region = '';
+  document.querySelectorAll('.region-chip').forEach(b => b.classList.remove('on'));
+  el?.classList.add('on');
+  updateAllChipState();
+  loadMembers();
+}
+
+function toggleTasteFilter(el) {
+  const value = el.textContent.trim();
+  const allBtn = document.querySelector('[data-filter-all="taste"]');
+
+  allBtn?.classList.remove('on');
+
+  if (el.classList.contains('on')) {
+    el.classList.remove('on');
+    filters.taste = filters.taste.filter(v => v !== value);
+  } else {
+    el.classList.add('on');
+    if (!filters.taste.includes(value)) filters.taste.push(value);
+  }
+
+  if (!filters.taste.length) allBtn?.classList.add('on');
+
+  updateAllChipState();
+  loadMembers();
+}
+
+function toggleHobbyFilter(el) {
+  const value = el.textContent.trim();
+  const allBtn = document.querySelector('[data-filter-all="hobby"]');
+
+  allBtn?.classList.remove('on');
+
+  if (el.classList.contains('on')) {
+    el.classList.remove('on');
+    filters.hobby = filters.hobby.filter(v => v !== value);
+  } else {
+    el.classList.add('on');
+    if (!filters.hobby.includes(value)) filters.hobby.push(value);
+  }
+
+  if (!filters.hobby.length) allBtn?.classList.add('on');
+
+  updateAllChipState();
+  loadMembers();
+}
+
+function toggleRegionFilter(el) {
+  const value = el.textContent.trim();
+  const allBtn = document.querySelector('[data-filter-all="region"]');
+
+  document.querySelectorAll('.region-chip').forEach(b => b.classList.remove('on'));
+
+  if (filters.region === value) {
+    filters.region = '';
+    allBtn?.classList.add('on');
+  } else {
+    filters.region = value;
+    el.classList.add('on');
+  }
+
+  updateAllChipState();
+  loadMembers();
+}
+
+// ── 회원 목록 로드 ─────────────────────────
+let _loadingMembers = false;
+async function loadMembers() {
+  if (_loadingMembers) return;
+  _loadingMembers = true;
+  const grid = document.getElementById('cardGrid');
+  if (!grid) { _loadingMembers = false; return; }
+  // 로딩 중 필터 버튼 비활성화
+  document.querySelectorAll('.taste-chip,.hobby-chip,.region-chip,.all-chip').forEach(b => b.style.pointerEvents = 'none');
+  grid.innerHTML = '<div style="grid-column:1/-1;padding:80px 0;text-align:center;color:var(--text-muted);font-size:14px;">불러오는 중...</div>';
+
+  try {
+    const p = new URLSearchParams();
+    if (filters.region) p.set('region', filters.region);
+    if (filters.taste.length) p.set('taste', filters.taste.join(','));
+    if (filters.hobby && filters.hobby.length) p.set('hobby', filters.hobby.join(','));
+
+    const res  = await fetch(`${BASE}/api/matching/recommend?${p}`, { headers: H });
+    const data = await res.json();
+
+    if (!res.ok) {
+      grid.innerHTML = `<div style="grid-column:1/-1;padding:60px;text-align:center;color:#C0392B;">${data.error || '오류 ' + res.status}</div>`;
+      return;
+    }
+
+    members = (Array.isArray(data) ? data : []).filter(memberMatchesCurrentFilters);
+    const cnt = document.getElementById('mtCount');
+    if (cnt) cnt.textContent = members.length + '명';
+
+    if (!members.length) {
+      const hasFilter = filters.region || filters.taste.length || filters.hobby.length;
+      grid.innerHTML = `<div style="grid-column:1/-1;padding:80px 0;text-align:center;">
+        <div style="font-size:40px;margin-bottom:16px;">🔍</div>
+        <div style="font-size:16px;color:var(--text-muted);margin-bottom:${hasFilter?'16px':'0'};">현재 소개 가능한 회원이 없습니다</div>
+        ${hasFilter ? `<div style="font-size:13px;color:var(--text-subtle);">필터를 초기화하면 더 많은 회원을 볼 수 있어요</div>
+          <button onclick="setAllFilters(document.querySelector('[data-filter-all=\\'all\\']'))" style="margin-top:14px;padding:9px 22px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:13px;font-family:var(--font-body);">필터 초기화</button>` : ''}
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = '';
+    members.forEach(m => {
+      const raw  = m.photos?.[0] || '';
+      const photo = raw ? (raw.startsWith('http') ? raw : BASE + raw) : '';
+      const liked = myLikes.has(m.user_id);
+      const card  = document.createElement('a');
+      card.className = 'mt-card';
+      card.href = '#';
+      card.onclick = e => { e.preventDefault(); openModal(m); };
+      card.innerHTML = `
+        <div class="mt-card-img" style="${photo ? `background-image:url(${photo});background-size:cover;background-position:center top;` : 'background:linear-gradient(160deg,#C9A48F,#2F1F1A);display:flex;align-items:center;justify-content:center;'}">
+          ${photo ? '' : `<span style="font-family:var(--font-display);font-size:clamp(48px,10vw,72px);font-weight:300;color:rgba(245,239,230,.5);">${(m.name||'?').charAt(0)}</span>`}
+          <span class="tl">${m.name || '—'}</span>
+          <span class="bl">${m.region || ''}</span>
+        </div>
+        <div class="mt-card-body">
+          <span class="mt-card-no">Member · ${m.age || ''}세</span>
+          <h3 class="mt-card-name">${m.name || '—'} <em>—</em> <span class="age">${m.age || ''}</span></h3>
+          <div class="mt-card-meta">${[m.region, m.job].filter(Boolean).map(s => s.toUpperCase()).join(' · ')}</div>
+          <p class="mt-card-bio">${m.bio || ''}</p>
+          <div class="mt-card-foot">
+            <span class="ratio">${liked ? '❤️ 좋아요' : '🤍 좋아요'}</span>
+            <span class="arrow">→</span>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+  } catch(e) {
+    document.getElementById('cardGrid').innerHTML =
+      `<div style="grid-column:1/-1;padding:60px;text-align:center;">
+         <div style="font-size:13px;color:#C0392B;margin-bottom:12px;">목록을 불러오지 못했습니다</div>
+         <button onclick="loadMembers()" style="padding:8px 20px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:13px;font-family:var(--font-body);">다시 시도</button>
+       </div>`;
+  } finally {
+    // 필터 버튼 재활성화
+    document.querySelectorAll('.taste-chip,.hobby-chip,.region-chip,.all-chip').forEach(b => b.style.pointerEvents = '');
+    _loadingMembers = false;
+  }
+}
+
+// ── 좋아요 목록 ────────────────────────────
+async function loadMyLikes() {
+  try {
+    const r = await fetch(`${BASE}/api/matching/my-likes`, { headers: H });
+    if (r.ok) { const d = await r.json(); myLikes = new Set(Array.isArray(d) ? d : []); }
+  } catch {}
+}
+
+// ── TODAY PICK ─────────────────────────────
+async function loadTop() {
+  try {
+    const r    = await fetch(`${BASE}/api/matching/top`);
+    let   rows = r.ok ? await r.json() : [];
+    if (!rows.length) {
+      const fb = await fetch(`${BASE}/api/matching/recommend`, { headers: H });
+      const d  = fb.ok ? await fb.json() : [];
+      if (d.length) rows = [{ ...d[0], month_likes: 0 }];
+    }
+    const card = document.getElementById('todayCard');
+    const empty= document.getElementById('todayEmpty');
+    if (!rows.length) { if (card) card.style.display='none'; if (empty) empty.style.display='block'; return; }
+    const top  = rows[0];
+    window.topMember = top;
+    if (card)  card.style.display  = '';
+    if (empty) empty.style.display = 'none';
+
+    const raw = top.photos?.[0] || '';
+    const photo = raw ? (raw.startsWith('http') ? raw : BASE + raw) : '';
+    const img = document.getElementById('todayImg');
+    if (img && photo) { img.style.backgroundImage = `url(${photo})`; img.style.backgroundSize = 'cover'; img.style.backgroundPosition = 'center top'; }
+    const el = id => document.getElementById(id);
+    if (el('todayName'))  el('todayName').innerHTML  = `${top.name || '—'} <em>—</em> <span style="color:rgba(245,239,230,.55);font-weight:300;">${top.age || ''}</span>`;
+    if (el('todayMeta'))  el('todayMeta').textContent = [top.region, top.job].filter(Boolean).map(s=>s.toUpperCase()).join(' · ');
+    if (el('todayNo'))    el('todayNo').textContent   = `이달의 TOP · ❤️ ${top.month_likes || 0}`;
+    if (el('todayQuote')&&top.bio) el('todayQuote').textContent = `"${top.bio}"`;
+    if (el('todayRegion'))el('todayRegion').textContent = top.region || '';
+    if (el('todayActions')) el('todayActions').innerHTML = `
+      <button class="btn btn-primary" onclick="openModal(window.topMember)" style="background:var(--champagne);color:var(--ink);border-color:var(--champagne);">프로필 보기 →</button>
+      <button class="btn btn-ghost" onclick="toggleLike('${top.user_id}',this)" style="color:var(--ivory);border-color:rgba(245,239,230,.3);">${myLikes.has(top.user_id)?'❤️ 좋아요':'🤍 좋아요'}</button>`;
+  } catch {}
+}
+
+// ── 프로필 모달 ────────────────────────────
+function openModal(m) {
+  currentMember = m;
+  let modal = document.getElementById('memberModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'memberModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:1000;background:rgba(26,7,8,.85);backdrop-filter:var(--modal-blur,blur(12px));display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.onclick = e => { if (e.target === modal) closeModal(); };
+    document.body.appendChild(modal);
+  }
+  const raw   = m.photos?.[0] || '';
+  const photo = raw ? (raw.startsWith('http') ? raw : BASE + raw) : '';
+  const liked = myLikes.has(m.user_id);
+  modal.innerHTML = `
+    <div style="background:var(--paper);border-radius:4px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;">
+      <div style="aspect-ratio:4/5;background:${photo ? `url(${photo}) center top/cover` : 'linear-gradient(155deg,#C9A48F,#2F1F1A)'};position:relative;border-radius:4px 4px 0 0;image-rendering:-webkit-optimize-contrast;image-rendering:smooth;display:flex;align-items:center;justify-content:center;">
+        ${photo ? '' : `<span style="font-family:var(--font-display);font-size:96px;font-weight:300;color:rgba(245,239,230,.35);">${(m.name||'?').charAt(0)}</span>`}
+        <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <div style="padding:28px 32px 40px;">
+        <div style="font-family:var(--font-display);font-size:36px;font-weight:300;margin-bottom:6px;">${m.name || '—'} <em style="color:var(--wine);">— ${m.age || ''}</em></div>
+        <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:20px;">${[m.region, m.job].filter(Boolean).join(' · ')}</div>
+        ${m.bio ? `<p style="font-family:var(--font-display);font-size:17px;font-style:italic;line-height:1.65;border-left:1px solid var(--champagne);padding-left:18px;margin-bottom:20px;">"${m.bio}"</p>` : ''}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:28px;">${[...(m.taste||[]),...(m.hobby||[])].map(t=>`<span class="chip" style="font-size:12px;">${t}</span>`).join('')}</div>
+        <button id="modalLikeBtn" onclick="toggleLikeModal()" style="width:100%;padding:14px;margin-bottom:10px;border-radius:999px;background:${liked?'var(--rose)':'var(--bordeaux)'};color:var(--ivory);border:none;cursor:pointer;font-size:14px;font-weight:500;">${liked?'❤️ 좋아요 취소':'🤍 좋아요'}</button>
+        <button onclick="requestMatch()" style="width:100%;padding:14px;border-radius:999px;background:transparent;color:var(--bordeaux);border:1px solid var(--bordeaux);cursor:pointer;font-size:14px;font-weight:500;">💌 소개팅 신청하기</button>
+      </div>
+    </div>`;
+  modal.style.display = 'flex';
+}
+
+function closeModal() { const m = document.getElementById('memberModal'); if (m) m.style.display = 'none'; }
+// ESC 키로 모달 닫기
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── 좋아요 ─────────────────────────────────
+async function toggleLike(userId, btn) {
+  try {
+    const r = await fetch(`${BASE}/api/matching/like/${userId}`, { method: 'POST', headers: H });
+    const d = await r.json();
+    if (d.liked) { myLikes.add(userId); if (btn) btn.textContent = '❤️ 좋아요'; }
+    else { myLikes.delete(userId); if (btn) btn.textContent = '🤍 좋아요'; }
+    loadTop();
+  } catch {}
+}
+
+async function toggleLikeModal() {
+  if (!currentMember) return;
+  const btn = document.getElementById('modalLikeBtn');
+  try {
+    const r = await fetch(`${BASE}/api/matching/like/${currentMember.user_id}`, { method: 'POST', headers: H });
+    const d = await r.json();
+    if (d.liked) { myLikes.add(currentMember.user_id); if(btn){btn.textContent='❤️ 좋아요 취소';btn.style.background='var(--rose)';} }
+    else { myLikes.delete(currentMember.user_id); if(btn){btn.textContent='🤍 좋아요';btn.style.background='var(--bordeaux)';} }
+    loadTop();
+    loadMembers();
+  } catch {}
+}
+
+// ── 소개팅 신청 ────────────────────────────
+async function requestMatch() {
+  if (!currentMember) return;
+
+  const name = currentMember.name || '이 회원';
+
+  if (!confirm(`${name}님께 소개팅을 신청하시겠습니까?`)) return;
+
+  let res;
+  let d = {};
+
+  try {
+    res = await fetch(`${BASE}/api/matches/request/${currentMember.user_id}`, {
+      method: 'POST',
+      headers: H
+    });
+
+    d = await res.json().catch(() => ({}));
+  } catch (err) {
+    console.error('소개팅 신청 네트워크 오류:', err);
+    alert('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+
+  if (!res.ok) {
+    if (res.status === 409 && d.status === 'accepted' && d.room_id) {
+      closeModal();
+      if (confirm(`${name}님과 이미 매칭 중입니다.
+채팅방으로 이동하시겠습니까?`)) {
+        window.location.href = `chat.html?room=${d.room_id}`;
+      }
+      return;
+    }
+
+    if (res.status === 409 && d.status === 'pending') {
+      alert(`${name}님께 이미 소개팅을 신청했습니다.
+매니저가 검토 중입니다.`);
+      return;
+    }
+
+    alert(d.error || '신청 실패');
+    return;
+  }
+
+  // 여기까지 왔으면 신청은 성공한 상태.
+  // 이후 UI 갱신 중 오류가 나도 실패 팝업을 띄우지 않는다.
+  try {
+    closeModal();
+
+    const pop = document.createElement('div');
+    pop.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(26,7,8,.85);backdrop-filter:var(--modal-blur,blur(12px));display:flex;align-items:center;justify-content:center;padding:20px;';
+    pop.innerHTML = `<div style="background:var(--paper);border-radius:var(--r-md);padding:48px 40px;max-width:360px;width:100%;text-align:center;">
+      <div style="font-size:48px;margin-bottom:20px;">💌</div>
+      <h2 style="font-family:var(--font-display);font-size:26px;font-weight:300;margin-bottom:12px;">신청 완료</h2>
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.8;margin-bottom:28px;">${name}님께 소개팅을 신청했습니다.<br>매니저가 검토 후 매칭을 진행합니다.</p>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:14px;border-radius:999px;background:var(--bordeaux);color:var(--ivory);border:none;cursor:pointer;font-size:14px;font-weight:500;">확인</button>
+    </div>`;
+
+    document.body.appendChild(pop);
+    setTimeout(() => pop?.remove(), 5000);
+
+    if (typeof loadMatchStatus === 'function') {
+      loadMatchStatus().catch?.(() => {});
+    }
+  } catch (uiErr) {
+    console.warn('소개팅 신청 후 화면 갱신 오류:', uiErr);
+  }
+}
+
+// ── 소개팅 신청 수신 알림 ─────────────────
+async function checkMatchNotifs() {
+  try {
+    const r = await fetch(`${BASE}/api/matches/received`, { headers: H });
+    if (!r.ok) return;
+    const list = await r.json();
+    if (!Array.isArray(list) || !list.length) return;
+    list.forEach(m => showMatchRequestNotif(m));
+  } catch {}
+}
+
+function showMatchRequestNotif(match) {
+  const pop = document.createElement('div');
+  pop.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(26,7,8,.8);backdrop-filter:var(--modal-blur,blur(12px));display:flex;align-items:center;justify-content:center;padding:20px;';
+  const raw = match.owner_photos?.[0] || '';
+  const abs = raw ? (raw.startsWith('http') ? raw : BASE + raw) : '';
+  pop.innerHTML = `<div style="background:var(--paper);border-radius:var(--r-md);padding:40px 36px;max-width:380px;width:100%;text-align:center;">
+    <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--champagne-deep);margin-bottom:16px;">💌 소개팅 신청</div>
+    ${abs ? `<div style="width:80px;height:80px;border-radius:50%;overflow:hidden;margin:0 auto 16px;"><img src="${abs}" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
+    <h2 style="font-family:var(--font-display);font-size:24px;font-weight:300;margin-bottom:8px;">${match.owner_name || '회원'}님이<br>소개팅을 신청했습니다</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:28px;line-height:1.7;">수락하시겠습니까?</p>
+    <div style="display:flex;gap:12px;">
+      <button onclick="rejectMatchReq('${match.id}',this.closest('[style*=fixed]'))" style="flex:1;padding:14px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:14px;">거절</button>
+      <button onclick="acceptMatchReq('${match.id}',this.closest('[style*=fixed]'))" style="flex:1;padding:14px;border-radius:999px;background:var(--bordeaux);color:var(--ivory);border:none;cursor:pointer;font-size:14px;font-weight:500;">수락</button>
+    </div>
+  </div>`;
+  document.body.appendChild(pop);
+}
+
+async function acceptMatchReq(matchId, pop) {
+  try {
+    const r = await fetch(`${BASE}/api/matches/accept/${matchId}`, { method: 'POST', headers: H });
+    const d = await r.json();
+    pop?.remove();
+    if (r.ok) { alert('✅ 수락했습니다!'); if (d.roomId) location.href = `chat.html?room=${d.roomId}`; }
+    else alert(d.error || '처리 실패');
+  } catch { alert('오류'); }
+}
+
+async function rejectMatchReq(matchId, pop) {
+  pop?.remove();
+  try { await fetch(`${BASE}/api/matches/reject/${matchId}`, { method: 'POST', headers: H }); } catch {}
+}
+
+// ── 알림 배지 ──────────────────────────────
+// api.js의 _setNavBadge가 '._nb' 클래스로 배지를 이미 관리함
+// 여기서 별도 배지를 만들면 두 개가 겹치므로, 같은 클래스명을 사용해 중복 방지
+async function checkNotifs() {
+  try {
+    const r = await fetch(`${BASE}/api/room/notifications/counts`, { headers: H });
+    if (!r.ok) return;
+
+    const counts = await r.json();
+    const unread = Number(counts.chat || 0);
+
+    const chatNav = document.querySelector('a[href="chat.html"].snb');
+    if (!chatNav) return;
+
+    // api.js와 동일한 '_nb' 클래스 사용 → 기존 배지 재사용, 중복 생성 없음
+    let badge = chatNav.querySelector('._nb');
+    if (unread > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = '_nb';
+        badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#C0392B;color:#fff;font-size:9px;font-weight:700;margin-left:4px;';
+        chatNav.appendChild(badge);
+      }
+      badge.textContent = unread > 99 ? '99+' : String(unread);
+    } else {
+      badge?.remove();
+    }
+  } catch {}
+}
+
+
+// ── 매칭 수락 팝업 알림 ─────────────────────
+function showMatchAcceptedPopup(notif) {
+  if (!notif) return;
+
+  const seenKey = `match_accept_popup_seen_${notif.id}`;
+  if (localStorage.getItem(seenKey)) return;
+  localStorage.setItem(seenKey, '1');
+
+  const link = notif.link || '/pages/chat.html';
+  const pop = document.createElement('div');
+  pop.style.cssText = 'position:fixed;inset:0;z-index:4000;background:rgba(26,7,8,.82);backdrop-filter:var(--modal-blur,blur(12px));display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  pop.innerHTML = `
+    <div style="background:var(--paper,#fff);border-radius:18px;padding:42px 34px;max-width:380px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.22);">
+      <div style="font-size:50px;margin-bottom:18px;">🎉</div>
+      <div style="font-family:var(--font-mono,monospace);font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--champagne-deep,#B8975C);margin-bottom:14px;">MATCH ACCEPTED</div>
+      <h2 style="font-family:var(--font-display,serif);font-size:26px;font-weight:300;line-height:1.35;margin:0 0 14px;color:var(--ink,#1A0708);">소개팅 신청이<br>수락되었습니다</h2>
+      <p style="font-size:14px;color:var(--text-muted,#777);line-height:1.8;margin:0 0 28px;">이제 채팅방에서 상대방과 대화를 시작할 수 있습니다.</p>
+      <div style="display:flex;gap:10px;">
+        <button id="matchAcceptLaterBtn" style="flex:1;padding:14px;border-radius:999px;border:1px solid var(--line,#ddd);background:transparent;color:var(--text,#222);cursor:pointer;font-size:14px;">나중에</button>
+        <button id="matchAcceptGoBtn" style="flex:1;padding:14px;border-radius:999px;border:none;background:var(--bordeaux,#3A0E14);color:var(--ivory,#fff);cursor:pointer;font-size:14px;font-weight:600;">채팅하기</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(pop);
+
+  const markRead = () => {
+    fetch(`${BASE}/api/room/notifications/${notif.id}/read`, {
+      method: 'PATCH',
+      headers: H
+    }).catch(() => {});
+  };
+
+  pop.querySelector('#matchAcceptLaterBtn')?.addEventListener('click', () => {
+    markRead();
+    pop.remove();
+  });
+
+  pop.querySelector('#matchAcceptGoBtn')?.addEventListener('click', () => {
+    markRead();
+    window.location.href = link.startsWith('http') ? link : `${BASE}${link}`;
+  });
+}
+
+async function checkMatchAcceptedPopup() {
+  try {
+    const r = await fetch(`${BASE}/api/room/notifications/list`, { headers: H });
+    if (!r.ok) return;
+
+    const list = await r.json();
+    if (!Array.isArray(list)) return;
+
+    const notif = list.find(n => !n.is_read && n.type === 'match_accept');
+    if (notif) showMatchAcceptedPopup(notif);
+  } catch (err) {
+    console.warn('매칭 수락 알림 확인 실패:', err.message);
+  }
+}
+
+function logout() {
+  localStorage.removeItem('ss_token');
+  localStorage.removeItem('ss_user');
+  window.location.href = window.location.origin;
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── 이달의 캐미커플 TOP3 ───────────────────
+async function loadChemiTop() {
+  const wrap  = document.getElementById('chemiTopList');
+  const month = document.getElementById('chemiMonth');
+  if (!wrap) return;
+
+  if (month) {
+    const now = new Date();
+    month.textContent = `${now.getFullYear()}. ${now.getMonth()+1}월`;
+  }
+
+  try {
+    const r = await fetch(`${BASE}/api/chemi/top`);
+    if (!r.ok) { console.error('캐미 TOP 오류:', r.status); return; }
+    const raw  = await r.json();
+    const tops = Array.isArray(raw) ? raw : (raw.rows || []);
+    const resetIn = raw.resetIn || null;
+
+    if (!Array.isArray(tops) || !tops.length) {
+      wrap.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text-muted);font-size:13px;">아직 캐미 게임 기록이 없습니다.<br>채팅에서 ✦ 버튼을 눌러 게임을 시작해보세요!</div>';
+      return;
+    }
+
+    const medals = ['🥇','🥈','🥉'];
+    wrap.innerHTML = tops.map((t, i) => {
+      const toAbs = url => !url ? '' : (url.startsWith('http') ? url : `${BASE}${url}`);
+      const p1Photo = toAbs(t.owner_photos?.[0]);
+      const p2Photo = toAbs(t.visual_photos?.[0]);
+      return `<div style="background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);padding:28px 20px;text-align:center;position:relative;">
+        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:28px;">${medals[i]||'✦'}</div>
+        <div style="display:flex;justify-content:center;margin:16px 0 18px;">
+          <div style="width:52px;height:52px;border-radius:50%;border:2px solid var(--champagne);overflow:hidden;background:linear-gradient(135deg,#C9A48F,#2F1F1A);${p1Photo?`background-image:url(${p1Photo});background-size:cover;background-position:center top;`:''};margin-right:-10px;position:relative;z-index:2;flex-shrink:0;"></div>
+          <div style="width:52px;height:52px;border-radius:50%;border:2px solid var(--champagne);overflow:hidden;background:linear-gradient(135deg,#9B7275,#321E20);${p2Photo?`background-image:url(${p2Photo});background-size:cover;background-position:center top;`:''};flex-shrink:0;"></div>
+        </div>
+        <div style="font-family:var(--font-display);font-size:17px;font-weight:300;margin-bottom:8px;">${t.owner_name||'—'} <em style="font-style:italic;color:var(--wine);">&</em> ${t.visual_name||'—'}</div>
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:400;color:var(--champagne-deep);margin-bottom:4px;">✦ ${t.score}점</div>
+        <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:.15em;text-transform:uppercase;">Chemi Score</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('캐미 TOP 로드 오류:', e);
+    wrap.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">불러오기 실패</div>';
+  }
+}
+
+// ── 초기화 ────────────────────────────────
+(async () => {
+  loadChemiTop();
+  await loadMyLikes();
+  await loadMembers();
+  loadTop();
+  checkMatchNotifs();
+  checkMatchAcceptedPopup();
+  checkNotifs();
+  // 탭이 숨겨져 있을 때 불필요한 요청 방지
+  const _visibleInterval = (fn, ms) => setInterval(() => { if (!document.hidden) fn(); }, ms);
+  _visibleInterval(checkNotifs, 30000);
+  _visibleInterval(checkMatchAcceptedPopup, 60000); // 10s→60s (WS가 주 알림 경로)
+  _visibleInterval(loadChemiTop, 120000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사소한 — 비주얼 회원</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --pink:#E8A1A8; --pink-deep:#C47A82; --bg:#1A1315; --bg2:#231719; --text:#F5F0EE; --border:rgba(255,255,255,.08); --muted:rgba(255,255,255,.4); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100vh; background:var(--bg); font-family:'Noto Sans KR',sans-serif; color:var(--text); }
+
+  header {
+    position:sticky; top:0; z-index:100;
+    background:rgba(26,19,21,.92); backdrop-filter:blur(20px);
+    padding:14px 32px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--border);
+  }
+  .logo { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; letter-spacing:.2em; color:var(--text); text-decoration:none; }
+  .nav-links { display:flex; gap:6px; }
+  .nav-link { padding:8px 16px; border-radius:50px; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; border:none; background:transparent; font-family:'Noto Sans KR',sans-serif; transition:all .2s; text-decoration:none; }
+  .nav-link:hover,.nav-link.active { background:var(--pink-deep); color:#fff; }
+  .nav-link.logout { color:rgba(231,76,60,.7); }
+  .nav-link.logout:hover { background:rgba(231,76,60,.15); color:#E74C3C; }
+
+  .main { max-width:700px; margin:0 auto; padding:40px 24px; }
+
+  .page-head { text-align:center; margin-bottom:40px; }
+  .page-head .eyebrow { font-size:10px; letter-spacing:.5em; color:var(--pink); margin-bottom:12px; }
+  .page-head h1 { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:300; color:var(--text); margin-bottom:8px; }
+  .page-head p { font-size:13px; color:var(--muted); }
+
+  /* 탭 */
+  .tabs { display:flex; border-bottom:1px solid var(--border); margin-bottom:28px; }
+  .tab { flex:1; padding:12px; text-align:center; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .2s; }
+  .tab.active { color:var(--pink); border-bottom-color:var(--pink); }
+
+  /* 신청 카드 */
+  .req-card {
+    background:var(--bg2); border:1px solid var(--border); border-radius:20px;
+    padding:20px; margin-bottom:14px; display:flex; gap:16px; align-items:flex-start;
+  }
+  .req-avatar { width:56px; height:56px; border-radius:50%; overflow:hidden; background:rgba(255,255,255,.08); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:24px; }
+  .req-avatar img { width:100%; height:100%; object-fit:cover; }
+  .req-info { flex:1; min-width:0; }
+  .req-name { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--text); margin-bottom:4px; }
+  .req-meta { font-size:12px; color:var(--muted); margin-bottom:8px; }
+  .req-bio { font-size:13px; color:rgba(255,255,255,.6); line-height:1.6; margin-bottom:14px; }
+  .req-time { font-size:11px; color:var(--muted); margin-bottom:12px; }
+  .req-btns { display:flex; gap:8px; }
+  .req-btn { flex:1; padding:10px; border-radius:50px; border:none; font-size:13px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; }
+  .req-btn.accept { background:var(--pink-deep); color:#fff; }
+  .req-btn.accept:hover { background:#B06070; }
+  .req-btn.reject { background:rgba(255,255,255,.08); color:var(--muted); border:1px solid var(--border); }
+  .req-btn.reject:hover { background:rgba(231,76,60,.15); color:#E74C3C; border-color:rgba(231,76,60,.3); }
+
+  /* 상태 배지 */
+  .status-row { display:flex; align-items:center; gap:10px; }
+  .s-badge { padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; }
+  .s-pending  { background:rgba(230,126,34,.15); color:#E67E22; }
+  .s-accepted { background:rgba(39,174,96,.15); color:#27AE60; }
+  .s-rejected { background:rgba(192,57,43,.15); color:#C0392B; }
+  .chat-btn { padding:7px 16px; border-radius:20px; background:var(--pink-deep); color:#fff; border:none; font-size:12px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
+
+  .empty { text-align:center; padding:60px 20px; color:var(--muted); }
+  .empty-icon { font-size:48px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/" class="logo">사소한</a>
+  <div class="nav-links">
+    <a class="nav-link active">✦ 신청 관리</a>
+    <a href="/pages/chat.html" class="nav-link">💬 채팅</a>
+    <a href="/pages/profile.html" class="nav-link">👤 프로필</a>
+    <button class="nav-link logout" onclick="logout()">로그아웃</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="page-head">
+    <div class="eyebrow">VISUAL MEMBER</div>
+    <h1>소개팅 신청 관리</h1>
+    <p>오너 회원들의 소개팅 신청을 확인하고 수락 또는 거절하세요</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('pending', this)">⏳ 대기 중</div>
+    <div class="tab" onclick="switchTab('accepted', this)">✅ 수락한 신청</div>
+    <div class="tab" onclick="switchTab('rejected', this)">❌ 거절한 신청</div>
+  </div>
+
+  <div id="reqList">
+    <div class="empty"><div class="empty-icon">✦</div><div>불러오는 중...</div></div>
+  </div>
+</div>
+
+<script src="../assets/api.js"></script>
+<script>
+  if (!API.requireAuth()) {}
+  const _me = API.getUser();
+  // 오너/관리자가 비주얼 페이지에 오면 올바른 페이지로
+  if (_me?.role === 'owner') { window.location.replace(`${window.location.origin}/pages/match.html`); }
+  if (_me?.role === 'admin') { window.location.replace(`${window.location.origin}/pages/admin.html`); }
+  let allRequests = [], currentTab = 'pending';
+
+  async function loadRequests() {
+    try {
+      allRequests = await fetch('/api/matches/received', {
+        headers:{ Authorization:`Bearer ${API.getToken()}` }
+      }).then(r=>r.json());
+      renderList();
+    } catch { document.getElementById('reqList').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div>불러오기 실패</div></div>'; }
+  }
+
+  function switchTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderList();
+  }
+
+  function renderList() {
+    const filtered = allRequests.filter(r => r.status === currentTab);
+    const list = document.getElementById('reqList');
+    if (!filtered.length) {
+      const msgs = { pending:'아직 새로운 신청이 없습니다', accepted:'수락한 신청이 없습니다', rejected:'거절한 신청이 없습니다' };
+      list.innerHTML = `<div class="empty"><div class="empty-icon">✦</div><div>${msgs[currentTab]}</div></div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(r => {
+      const photo = r.owner_photos?.[0];
+      const time = new Date(r.created_at).toLocaleDateString('ko', { month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      if (currentTab === 'pending') {
+        return `<div class="req-card">
+          <div class="req-avatar">${photo?`<img src="${photo}">`:'👤'}</div>
+          <div class="req-info">
+            <div class="req-name">${r.owner_name}</div>
+            <div class="req-meta">${r.owner_age}세 · ${r.owner_region||'지역 미정'} · ${r.owner_job||'직업 미정'}</div>
+            ${r.owner_bio?`<div class="req-bio">${r.owner_bio}</div>`:''}
+            <div class="req-time">${time} 신청</div>
+            <div class="req-btns">
+              <button class="req-btn accept" onclick="respond('${r.id}', 'accept')">✓ 수락하기</button>
+              <button class="req-btn reject" onclick="respond('${r.id}', 'reject')">✕ 거절하기</button>
+            </div>
+          </div>
+        </div>`;
+      } else {
+        const sClass = { accepted:'s-accepted', rejected:'s-rejected' }[r.status];
+        const sText  = { accepted:'✅ 수락함', rejected:'❌ 거절함' }[r.status];
+        return `<div class="req-card">
+          <div class="req-avatar">${photo?`<img src="${photo}">`:'👤'}</div>
+          <div class="req-info">
+            <div class="req-name">${r.owner_name}</div>
+            <div class="req-meta">${r.owner_age}세 · ${r.owner_region||''} · ${r.owner_job||''}</div>
+            <div class="req-time">${time}</div>
+            <div class="status-row">
+              <span class="s-badge ${sClass}">${sText}</span>
+              ${r.status==='accepted'?`<button class="chat-btn" onclick="location.href='/pages/chat.html'">채팅하기</button>`:''}
+            </div>
+          </div>
+        </div>`;
+      }
+    }).join('');
+  }
+
+  async function respond(matchId, action) {
+    const url = `/api/matches/${action}/${matchId}`;
+    try {
+      await fetch(url, { method:'PATCH', headers:{ Authorization:`Bearer ${API.getToken()}` } });
+      if (action === 'accept') alert('소개팅 신청을 수락했습니다! 채팅을 시작해보세요.');
+      else alert('소개팅 신청을 거절했습니다.');
+      loadRequests();
+    } catch { alert('처리에 실패했습니다.'); }
+  }
+
+  function logout() { API.logout(); }
+
+  loadRequests();
+  // 30초마다 자동 새로고침
+  setInterval(loadRequests, 30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내 프로필 · CHEMI LINE</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<style>
+body { background:var(--ivory); }
+.pf-wrap { max-width:1300px; margin:0 auto; padding:56px 48px 120px; }
+@media(max-width:640px){ .pf-wrap{padding:24px 16px 100px;} }
+
+/* ── 뷰 모드 ── */
+#viewMode { display:block; }
+.pf-hero { display:grid; gap:32px; margin-bottom:60px; }
+@media(min-width:880px){ .pf-hero{grid-template-columns:1fr 1.1fr;gap:64px;align-items:start;} }
+.pf-portrait { aspect-ratio:4/5; position:relative; background:linear-gradient(160deg,#C9A48F 0%,#6B4F44 50%,#2F1F1A 100%); border-radius:4px; overflow:hidden; background-size:cover; background-position:center; }
+.pf-portrait::before { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,.45),transparent 55%); z-index:1; }
+.pf-portrait .tl { position:absolute; top:24px; left:24px; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--champagne); z-index:2; }
+.pf-portrait .city { position:absolute; bottom:26px; left:26px; font-family:var(--font-display); font-size:16px; color:rgba(245,239,230,.85); font-style:italic; z-index:2; }
+.pf-name { font-family:var(--font-display); font-size:clamp(44px,6.5vw,88px); font-weight:300; line-height:1; letter-spacing:-.025em; color:var(--ink); margin-bottom:14px; }
+.pf-name em { font-style:italic; color:var(--wine); }
+.pf-meta { font-family:var(--font-mono); font-size:14px; letter-spacing:.24em; text-transform:uppercase; color:var(--text-muted); margin-bottom:28px; }
+.pf-quote { font-family:var(--font-display); font-size:20px; font-weight:300; font-style:italic; line-height:1.6; color:var(--ink); border-left:1px solid var(--champagne); padding-left:22px; }
+.pf-section { margin-bottom:64px; }
+.pf-table { border-top:1px solid var(--line); }
+.pf-table > div { display:grid; grid-template-columns:160px 1fr; padding:20px 0; border-bottom:1px solid var(--line); align-items:baseline; gap:20px; }
+@media(max-width:640px){ .pf-table>div{grid-template-columns:1fr;gap:4px;padding:14px 0;} }
+.pf-table .k { font-family:var(--font-mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-subtle); }
+.pf-table .v { font-size:15px; line-height:1.7; color:var(--ink); }
+.pf-tags { display:flex; flex-wrap:wrap; gap:8px; }
+.pf-tag { padding:8px 16px; border:1px solid var(--line); border-radius:var(--r-pill); font-size:13px; color:var(--text-muted); background:var(--paper); }
+.pf-bar { position:sticky; bottom:24px; z-index:50; margin:48px auto 0; max-width:720px; background:var(--ink); color:var(--ivory); border-radius:var(--r-pill); padding:12px 12px 12px 28px; display:flex; justify-content:space-between; align-items:center; gap:16px; box-shadow:var(--shadow-lg); }
+.pf-bar-info { font-family:var(--font-mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,239,230,.7); }
+.pf-bar-info b { color:var(--champagne); font-family:var(--font-display); font-size:14px; font-style:italic; }
+.pf-bar-actions { display:flex; gap:8px; }
+@media(max-width:640px){ .pf-bar{flex-direction:column;padding:16px;border-radius:var(--r-md);bottom:12px;} }
+
+/* ── 편집 모드 ── */
+#editMode { display:none; }
+.ed-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:16px; }
+.ed-title { font-family:var(--font-display); font-size:clamp(28px,4vw,48px); font-weight:300; letter-spacing:-.02em; }
+.ed-title em { font-style:italic; color:var(--wine); }
+
+/* 단계 */
+.ed-steps { display:flex; gap:4px; margin-bottom:16px; background:var(--bone); border-radius:999px; padding:4px; }
+.ed-step-btn { flex:1; padding:8px 4px; border:none; background:transparent; border-radius:999px; font-size:14px; font-family:var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); cursor:pointer; transition:all .25s; white-space:nowrap; }
+.ed-step-btn.active { background:var(--bordeaux); color:var(--ivory); }
+.ed-step-btn.done { color:var(--champagne-deep); }
+.ed-progress { height:3px; background:var(--bone); border-radius:2px; margin-bottom:28px; overflow:hidden; }
+.ed-progress-bar { height:100%; background:linear-gradient(90deg,var(--bordeaux),var(--rose)); border-radius:2px; transition:width .4s ease; }
+.ed-panel { display:none; }
+.ed-panel.active { display:block; }
+.ed-autosave { font-family:var(--font-mono); font-size:14px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; min-height:14px; }
+
+.ed-card { background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:32px; margin-bottom:24px; }
+@media(max-width:640px){ .ed-card{padding:20px 16px;} }
+.ed-card-title { font-family:var(--font-mono); font-size:14px; letter-spacing:.28em; text-transform:uppercase; color:var(--champagne-deep); display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+.ed-card-title::before { content:''; width:24px; height:1px; background:var(--champagne-deep); }
+.ed-field { margin-bottom:20px; }
+.field-label { display:block; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px; }
+.ed-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:640px){
+  .ed-grid2{grid-template-columns:1fr;}
+  .ed-photo-main { aspect-ratio: 3/4; max-height: 240px; }
+}
+.chip-group { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+
+/* 사진 업로드 */
+.ed-photo-main { aspect-ratio:4/5; border-radius:var(--r-sm); overflow:hidden; background:linear-gradient(160deg,#C9A48F,#2F1F1A); cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative; background-size:cover; background-position:center top; image-rendering:-webkit-optimize-contrast; image-rendering:smooth; }
+.ed-photo-main:hover::after { content:'📷 변경'; position:absolute; inset:0; background:rgba(26,7,8,.55); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:14px; letter-spacing:.2em; text-transform:uppercase; color:var(--champagne); }
+
+/* 저장 바 */
+.ed-save-bar { position:sticky; bottom:24px; z-index:50; margin-top:32px; background:var(--ink); border-radius:var(--r-pill); padding:12px 12px 12px 28px; display:flex; justify-content:space-between; align-items:center; gap:16px; box-shadow:var(--shadow-lg); }
+.ed-save-msg { font-family:var(--font-mono); font-size:14px; letter-spacing:.2em; text-transform:uppercase; color:rgba(245,239,230,.6); }
+.ed-save-actions { display:flex; gap:8px; }
+@media(max-width:640px){ .ed-save-bar{flex-direction:column;padding:16px;border-radius:var(--r-md);bottom:12px;} }
+
+input[type=range] { -webkit-appearance:none; width:100%; height:3px; border-radius:2px; background:var(--bone); outline:none; cursor:pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--bordeaux); cursor:pointer; }
+/* iOS 자동 줌 방지 */
+input[type=text], input[type=number], input[type=email], textarea, select { font-size: 16px !important; }
+@media (max-width: 640px) {
+  .pf-name { font-size: clamp(36px, 10vw, 64px); }
+  .pf-portrait { aspect-ratio: 3/4; }
+  .pf-section { margin-bottom: 40px; }
+  .ed-steps { gap: 2px; }
+  .ed-step-btn { font-size: 14px; padding: 7px 4px; }
+}
+  @media (max-width: 640px) {
+    input[type=text], input[type=number], textarea, select { font-size: 16px !important; }
+    .ed-photo-main { aspect-ratio: 3/4; max-height: 220px; }
+    .pf-name { font-size: clamp(36px, 9vw, 60px) !important; }
+    .pf-bar { flex-direction: column; gap: 12px; text-align: center; }
+    .ed-save-bar { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="../index.html" class="site-logo">CHEMI&nbsp;LINE</a>
+  <div class="site-nav-links">
+    <a href="match.html" class="snb">매칭</a>
+    <a href="chat.html" class="snb">채팅</a>
+    <a href="profile.html" class="snb active">프로필</a>
+    <a href="inquiry.html" class="snb">문의</a>
+    <button class="snb logout" onclick="logout()">로그아웃</button>
+  </div>
+</nav>
+
+<div class="pf-wrap">
+  <a href="match.html" class="pf-back" style="font-family:var(--font-mono);font-size:14px;letter-spacing:.24em;text-transform:uppercase;color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center;gap:8px;margin-bottom:40px;">← 매칭으로</a>
+
+  <!-- ═══ 뷰 모드 ═══ -->
+  <div id="viewMode">
+    <section class="pf-hero">
+      <div>
+        <div class="pf-portrait" id="pfPortrait">
+          <span class="tl">M — —</span>
+          <span class="city" id="pfCity">—</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-mono);font-size:14px;letter-spacing:.32em;color:var(--champagne-deep);display:inline-flex;align-items:center;gap:14px;margin-bottom:24px;">Profile · 내 정보</div>
+        <h1 class="pf-name" id="pfName">—</h1>
+        <div class="pf-meta" id="pfMeta">—</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;background:var(--ink);color:var(--champagne);border-radius:var(--r-pill);font-family:var(--font-mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:28px;">❤️ <span id="pfLikesNum">0</span> likes</div>
+        <p class="pf-quote" id="pfQuote">자기소개를 추가해주세요.</p>
+      </div>
+    </section>
+
+    <section class="pf-section">
+      <div style="font-family:var(--font-mono);font-size:14px;letter-spacing:.32em;text-transform:uppercase;color:var(--champagne-deep);display:inline-flex;align-items:center;gap:14px;margin-bottom:20px;">About · 001</div>
+      <div class="pf-table">
+        <div><span class="k">Profession</span><span class="v" id="pf_job">—</span></div>
+        <div><span class="k">Living in</span><span class="v" id="pf_region">—</span></div>
+        <div><span class="k">Gender</span><span class="v" id="pf_gender">—</span></div>
+        <div><span class="k">Age</span><span class="v" id="pf_age">—</span></div>
+      </div>
+    </section>
+
+    <section class="pf-section">
+      <div style="font-family:var(--font-mono);font-size:14px;letter-spacing:.32em;text-transform:uppercase;color:var(--champagne-deep);display:inline-flex;align-items:center;gap:14px;margin-bottom:20px;">Tastes · 002</div>
+      <div class="pf-tags" id="pfTags"></div>
+    </section>
+
+    <div class="pf-bar">
+      <span class="pf-bar-info">내 프로필 · <b id="pfBarName">—</b></span>
+      <div class="pf-bar-actions">
+        <button class="btn btn-ghost" onclick="showEdit()" style="color:var(--ivory);border-color:rgba(245,239,230,.25);">프로필 수정</button>
+        <a href="match.html" class="btn btn-gold">매칭 보기 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 편집 모드 ═══ -->
+  <div id="editMode">
+    <div class="ed-header">
+      <h2 class="ed-title">프로필 <em>수정</em></h2>
+      <button class="btn btn-ghost" onclick="showView()">← 뒤로</button>
+    </div>
+
+    <div class="ed-autosave" id="autoSaveMsg">자동 저장됩니다</div>
+
+    <!-- 단계 버튼 -->
+    <div class="ed-steps">
+      <button class="ed-step-btn active" id="stepBtn1" onclick="goStep(1)">1 사진</button>
+      <button class="ed-step-btn"        id="stepBtn2" onclick="goStep(2)">2 기본정보</button>
+      <button class="ed-step-btn"        id="stepBtn3" onclick="goStep(3)">3 취향</button>
+      <button class="ed-step-btn"        id="stepBtn4" onclick="goStep(4)">4 소개</button>
+    </div>
+    <div class="ed-progress">
+      <div class="ed-progress-bar" id="edProgressBar" style="width:25%;"></div>
+    </div>
+
+    <!-- 패널 1: 사진 -->
+    <div class="ed-panel active" id="edPanel1">
+      <div class="ed-card">
+        <div class="ed-card-title">Photos · 사진</div>
+        <div style="max-width:240px;">
+          <div class="ed-photo-main" id="edMainPhoto" onclick="document.getElementById('pf0').click()">
+            <span style="font-family:var(--font-mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,239,230,.6);text-align:center;padding:20px;">대표 사진</span>
+          </div>
+          <input type="file" id="pf0" accept="image/*" style="display:none" onchange="uploadPhoto(this,0)">
+          <p style="font-size:14px;color:var(--text-subtle);margin-top:12px;line-height:1.7;">얼굴이 잘 나온 사진을 올려주세요.<br>JPG, PNG · 최대 10MB</p>
+        </div>
+        <div class="ed-save-msg" id="edSaveMsg" style="margin-top:16px;min-height:16px;font-size:14px;"></div>
+      </div>
+    </div>
+
+    <!-- 패널 2: 기본정보 -->
+    <div class="ed-panel" id="edPanel2">
+      <div class="ed-card">
+        <div class="ed-card-title">Basic · 기본 정보</div>
+        <div class="ed-grid2">
+          <div class="ed-field">
+            <label class="field-label">이름</label>
+            <input type="text" class="input" id="ed_name" placeholder="실명">
+          </div>
+          <div class="ed-field">
+            <label class="field-label">나이</label>
+            <input type="number" class="input" id="ed_age" placeholder="만 나이" min="19" max="70">
+          </div>
+        </div>
+        <div class="ed-field">
+          <label class="field-label">성별</label>
+          <div class="chip-group">
+            <button type="button" class="chip" id="genderMale" onclick="pickGender('male')">👨 남성</button>
+            <button type="button" class="chip" id="genderFemale" onclick="pickGender('female')">👩 여성</button>
+          </div>
+        </div>
+        <div class="ed-field">
+          <label class="field-label">지역</label>
+          <div class="chip-group" id="regionChips">
+                          <button type="button" class="chip" onclick="pickRegion(this)">서울 강남·서초</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">서울 마포·홍대</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">서울 용산·이태원</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">서울 기타</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">경기·인천</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">부산·경남</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">대구·경북</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">대전·충청</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">광주·전라</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">강원·제주</button>
+              <button type="button" class="chip" onclick="pickRegion(this)">그 외</button>
+          </div>
+        </div>
+        <div class="ed-field">
+          <label class="field-label">직업</label>
+          <div class="chip-group" id="jobChips">
+                          <button type="button" class="chip" onclick="pickJob(this)">전문직</button>
+              <button type="button" class="chip" onclick="pickJob(this)">대기업</button>
+              <button type="button" class="chip" onclick="pickJob(this)">공무원</button>
+              <button type="button" class="chip" onclick="pickJob(this)">공기업</button>
+              <button type="button" class="chip" onclick="pickJob(this)">금융권</button>
+              <button type="button" class="chip" onclick="pickJob(this)">IT·개발</button>
+              <button type="button" class="chip" onclick="pickJob(this)">디자인·예술</button>
+              <button type="button" class="chip" onclick="pickJob(this)">마케팅·기획</button>
+              <button type="button" class="chip" onclick="pickJob(this)">교육</button>
+              <button type="button" class="chip" onclick="pickJob(this)">의료</button>
+              <button type="button" class="chip" onclick="pickJob(this)">프리랜서</button>
+              <button type="button" class="chip" onclick="pickJob(this)">자영업</button>
+              <button type="button" class="chip" onclick="pickJob(this)">사업가</button>
+              <button type="button" class="chip" onclick="pickJob(this)">학생</button>
+              <button type="button" class="chip" onclick="pickJob(this)">기타</button>
+          </div>
+        </div>
+        <div class="ed-grid2" style="margin-top:8px;">
+          <div class="ed-field">
+            <label class="field-label">키 — <span id="heightVal" style="color:var(--champagne-deep);">165cm</span></label>
+            <input type="range" id="ed_height" min="140" max="200" value="165" oninput="document.getElementById('heightVal').textContent=this.value+'cm'">
+          </div>
+          <div class="ed-field">
+            <label class="field-label">몸무게 — <span id="weightVal" style="color:var(--champagne-deep);">60kg</span></label>
+            <input type="range" id="ed_weight" min="40" max="120" value="60" oninput="document.getElementById('weightVal').textContent=this.value+'kg'">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 패널 3: 취향 -->
+    <div class="ed-panel" id="edPanel3">
+      <div class="ed-card">
+        <div class="ed-card-title">Tastes · 취향 & 취미</div>
+        <div class="ed-field">
+          <label class="field-label">취향 <span style="color:var(--text-subtle);">(최대 5개)</span></label>
+          <div class="chip-group" id="tasteChips">
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🍷 와인·음주</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">☕ 카페·커피</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🎵 클래식·음악</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🎬 영화·OTT</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🍽️ 맛집 탐방</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">✈️ 해외여행</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🏕️ 국내여행</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">📚 독서·글쓰기</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🎮 게임</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🛍️ 쇼핑·패션</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🎨 예술·전시</button>
+            <button type="button" class="chip" onclick="toggleMulti('taste',this)">🏖️ 액티비티</button>
+          </div>
+        </div>
+        <div class="ed-field" style="margin-bottom:0;">
+          <label class="field-label">취미 <span style="color:var(--text-subtle);">(최대 5개)</span></label>
+          <div class="chip-group" id="hobbyChips">
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">⛳ 골프</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🎾 테니스</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🏋️ 헬스·운동</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🧘 요가·필라테스</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🚴 자전거·러닝</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🍳 요리·베이킹</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🎸 악기 연주</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">📸 사진·영상</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🐾 반려동물</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🌱 원예·식물</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🎲 보드게임</button>
+            <button type="button" class="chip" onclick="toggleMulti('hobby',this)">🏊 수영·다이빙</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 패널 4: 소개 -->
+    <div class="ed-panel" id="edPanel4">
+      <div class="ed-card">
+        <div class="ed-card-title">Intro · 자기소개</div>
+        <div class="ed-field">
+          <label class="field-label">자기소개 <span style="color:var(--text-subtle);">상대에게 보여집니다</span></label>
+          <textarea class="input" id="ed_bio" rows="6" style="resize:none;" placeholder="나를 표현하는 한 문장을 적어주세요. 취향, 성격, 찾는 인연에 대해 솔직하게 쓸수록 좋은 만남으로 이어집니다."></textarea>
+        </div>
+        <div style="font-size:14px;color:var(--text-muted);line-height:1.8;padding:14px;background:var(--cream);border-radius:var(--r-sm);">
+          💡 <b>작성 팁:</b> "나는 주말에 ___를 즐기는 사람입니다" 처럼 구체적으로 쓰면 매칭 정확도가 높아집니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- 저장 바 -->
+    <div class="ed-save-bar">
+      <span class="ed-save-msg" id="edBottomMsg">변경 후 저장해주세요</span>
+      <div class="ed-save-actions">
+        <button class="btn btn-ghost" id="edPrevBtn" onclick="goStep(currentStep-1)" style="color:rgba(245,239,230,.7);border-color:rgba(245,239,230,.2);display:none;">← 이전</button>
+        <button class="btn btn-gold"  id="edNextBtn" onclick="goStepNext()">다음 →</button>
+        <button class="btn btn-gold"  id="edSaveBtn" onclick="saveProfile()" style="display:none;">저장하기 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/api.js"></script>
+<script>
+const _t   = localStorage.getItem('ss_token');
+const _u   = (() => { try { return JSON.parse(localStorage.getItem('ss_user')); } catch { return null; } })();
+if (!_t || !_u) { window.location.href = window.location.origin; }
+
+const BASE = window.location.origin;
+const AUTH = { Authorization: `Bearer ${_t}` };
+const toAbs = url => !url ? '' : (url.startsWith('http') ? url : BASE + url);
+const params = new URLSearchParams(location.search);
+const viewedUserId = params.get('user');
+const fromPage = params.get('from');
+const fromRoom = params.get('room');
+const isOtherProfile = !!viewedUserId;
+
+let profile = null;
+let selectedGender = '', selectedRegion = '', selectedJob = '';
+let selectedTaste = [], selectedHobby = [];
+let currentStep = 1;
+const TOTAL = 4;
+
+// ── 초기 로드 ─────────────────────────────
+async function init() {
+  try {
+    const url = isOtherProfile
+      ? `${BASE}/api/profiles/${encodeURIComponent(viewedUserId)}`
+      : `${BASE}/api/profiles/me`;
+
+    const r = await fetch(url, { headers: AUTH });
+
+    if (!r.ok) {
+      if (r.status === 401) {
+        logout();
+        return;
+      }
+
+      alert('프로필을 불러오지 못했습니다.');
+      if (fromPage === 'chat') {
+        window.location.href = fromRoom ? `chat.html?room=${encodeURIComponent(fromRoom)}` : 'chat.html';
+      }
+      return;
+    }
+
+    const data = await r.json();
+    profile = data;
+
+    if (data) renderView(data);
+    else if (!isOtherProfile) setTimeout(showEdit, 300);
+
+    if (isOtherProfile) {
+      document.title = `${data?.name || '상대'} 프로필 · CHEMI LINE`;
+
+      const editMode = document.getElementById('editMode');
+      if (editMode) editMode.style.display = 'none';
+
+      const barActions = document.querySelector('.pf-bar-actions');
+      if (barActions) {
+        barActions.innerHTML = `<button class="btn btn-gold" onclick="goBackFromProfile()">채팅으로 돌아가기 →</button>`;
+      }
+
+      const back = document.querySelector('.pf-back');
+      if (back) {
+        back.textContent = '← 채팅으로';
+        back.href = fromRoom ? `chat.html?room=${encodeURIComponent(fromRoom)}` : 'chat.html';
+      }
+    }
+  } catch(e) {
+    console.error('프로필 로드 오류:', e);
+  }
+}
+
+// ── 뷰 렌더 ─────────────────────────────
+function renderView(p) {
+  if (!p) return;
+  const photos = Array.isArray(p.photos) ? p.photos.filter(Boolean) : [];
+  const portrait = document.getElementById('pfPortrait');
+  if (photos[0]) {
+    portrait.style.backgroundImage = `url(${toAbs(photos[0])})`;
+    portrait.style.backgroundSize = 'cover';
+    portrait.style.backgroundPosition = 'center';
+  }
+  const nameEl = document.getElementById('pfName');
+  if (nameEl) nameEl.innerHTML = p.name
+    ? `${p.name} <em>—</em> <span style="color:var(--text-muted);font-weight:300;">${p.age||''}</span>`
+    : '프로필을 작성해주세요';
+  const setEl = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v||'—'; };
+  setEl('pfCity',    p.region);
+  setEl('pfMeta',    [p.region, p.job, p.height?p.height+'cm':null].filter(Boolean).map(s=>s.toUpperCase()).join(' · '));
+  setEl('pfLikesNum', p.likes_count||0);
+  setEl('pfQuote',   p.bio||'자기소개를 추가해주세요.');
+  setEl('pf_job',    p.job);
+  setEl('pf_region', p.region);
+  setEl('pf_gender', p.gender==='male'?'남성':p.gender==='female'?'여성':'—');
+  setEl('pf_age',    p.age?p.age+'세':'—');
+  setEl('pfBarName', p.name);
+  const tagsWrap = document.getElementById('pfTags');
+  if (tagsWrap) {
+    tagsWrap.innerHTML = '';
+    [...(p.taste||[]),...(p.hobby||[])].forEach(t => {
+      const span = document.createElement('span');
+      span.className = 'pf-tag'; span.textContent = t;
+      tagsWrap.appendChild(span);
+    });
+  }
+  if (!isOtherProfile && !p.name) setTimeout(showEdit, 300);
+}
+
+// ── 단계 관리 ─────────────────────────────
+function goStep(n) {
+  if (n<1||n>TOTAL) return;
+  document.querySelectorAll('.ed-panel').forEach(p=>p.classList.remove('active'));
+  const panel = document.getElementById(`edPanel${n}`);
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll('.ed-step-btn').forEach((b,i)=>{
+    b.classList.toggle('active', i+1===n);
+    b.classList.toggle('done', i+1<n);
+  });
+  const bar = document.getElementById('edProgressBar');
+  if (bar) bar.style.width = `${(n/TOTAL)*100}%`;
+  const prev=document.getElementById('edPrevBtn');
+  const next=document.getElementById('edNextBtn');
+  const save=document.getElementById('edSaveBtn');
+  if (prev) prev.style.display = n>1 ? 'inline-flex' : 'none';
+  if (next) next.style.display = n<TOTAL ? 'inline-flex' : 'none';
+  if (save) save.style.display = n===TOTAL ? 'inline-flex' : 'none';
+  currentStep = n;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function goStepNext() {
+  // 2단계(기본정보) → 3단계로 넘어갈 때 필수 항목 검증
+  if (currentStep === 2) {
+    const name = document.getElementById('ed_name')?.value.trim();
+    const age  = document.getElementById('ed_age')?.value;
+    const msg  = document.getElementById('edSaveMsg');
+    if (!name) {
+      if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = '이름을 입력해주세요.'; }
+      document.getElementById('ed_name')?.focus();
+      return;
+    }
+    if (!age || parseInt(age) < 19 || parseInt(age) > 70) {
+      if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = '나이를 올바르게 입력해주세요. (19~70세)'; }
+      document.getElementById('ed_age')?.focus();
+      return;
+    }
+    if (!selectedGender) {
+      if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = '성별을 선택해주세요.'; }
+      return;
+    }
+  }
+  autoSave();
+  goStep(currentStep + 1);
+}
+
+function autoSave() {
+  const draft = {
+    name: document.getElementById('ed_name')?.value||'',
+    age:  document.getElementById('ed_age')?.value||'',
+    bio:  document.getElementById('ed_bio')?.value||'',
+    height: document.getElementById('ed_height')?.value||165,
+    weight: document.getElementById('ed_weight')?.value||60,
+    gender:selectedGender, region:selectedRegion, job:selectedJob,
+    taste:selectedTaste, hobby:selectedHobby,
+  };
+  localStorage.setItem('pf_draft', JSON.stringify(draft));
+  const msg=document.getElementById('autoSaveMsg');
+  if (msg) { msg.style.color = '#27AE60'; msg.textContent = '✓ 임시 저장됨'; setTimeout(() => { msg.textContent = ''; }, 2500); }
+}
+
+// ── 편집 모드 전환 ────────────────────────
+function showEdit() {
+  if (isOtherProfile) return;
+  document.getElementById('viewMode').style.display = 'none';
+  document.getElementById('editMode').style.display = 'block';
+  goStep(1);
+
+  const p = profile || {};
+  // 임시 저장본 복원
+  let src = p;
+  try {
+    const draft = JSON.parse(localStorage.getItem('pf_draft')||'null');
+    if (draft && draft.name) src = draft;
+  } catch {}
+
+  const setV = (id, v) => { const el=document.getElementById(id); if(el&&v!=null) el.value=v; };
+  setV('ed_name', src.name||p.name||'');
+  setV('ed_age',  src.age ||p.age ||'');
+  setV('ed_bio',  src.bio ||p.bio ||'');
+
+  const h = src.height||p.height||165;
+  const w = src.weight||p.weight||60;
+  setV('ed_height', h); document.getElementById('heightVal').textContent = h+'cm';
+  setV('ed_weight', w); document.getElementById('weightVal').textContent = w+'kg';
+
+  selectedGender = src.gender||p.gender||'';
+  document.getElementById('genderMale').classList.toggle('on', selectedGender==='male');
+  document.getElementById('genderFemale').classList.toggle('on', selectedGender==='female');
+
+  selectedRegion = src.region||p.region||'';
+  document.querySelectorAll('#regionChips .chip').forEach(b=>b.classList.toggle('on', b.textContent.trim()===selectedRegion));
+
+  selectedJob = src.job||p.job||'';
+  document.querySelectorAll('#jobChips .chip').forEach(b=>{
+    const txt=b.textContent.trim().replace(/^.\s/,'');
+    b.classList.toggle('on', b.textContent.trim()===selectedJob||txt===selectedJob);
+  });
+
+  selectedTaste = [...(src.taste||p.taste||[])];
+  selectedHobby = [...(src.hobby||p.hobby||[])];
+  document.querySelectorAll('#tasteChips .chip').forEach(b=>b.classList.toggle('on', selectedTaste.includes(b.textContent.trim())));
+  document.querySelectorAll('#hobbyChips .chip').forEach(b=>b.classList.toggle('on', selectedHobby.includes(b.textContent.trim())));
+
+  // 기존 대표 사진
+  const photos = Array.isArray(p.photos)?p.photos.filter(Boolean):[];
+  if (photos[0]) {
+    const main=document.getElementById('edMainPhoto');
+    main.style.backgroundImage=`url(${toAbs(photos[0])})`;
+    main.style.backgroundSize='cover'; main.style.backgroundPosition='center';
+  }
+}
+
+function showView() {
+  document.getElementById('editMode').style.display = 'none';
+  document.getElementById('viewMode').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── 선택 함수 ─────────────────────────────
+function pickGender(v) {
+  selectedGender=v;
+  document.getElementById('genderMale').classList.toggle('on',v==='male');
+  document.getElementById('genderFemale').classList.toggle('on',v==='female');
+}
+function pickRegion(el) {
+  selectedRegion=el.textContent.trim();
+  document.querySelectorAll('#regionChips .chip').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+function pickJob(el) {
+  selectedJob=el.textContent.trim();
+  document.querySelectorAll('#jobChips .chip').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+function toggleMulti(type, el) {
+  const arr = type==='taste'?selectedTaste:selectedHobby;
+  const val = el.textContent.trim();
+  if (el.classList.contains('on')) {
+    el.classList.remove('on');
+    if(type==='taste') selectedTaste=selectedTaste.filter(v=>v!==val);
+    else selectedHobby=selectedHobby.filter(v=>v!==val);
+  } else {
+    if (arr.length >= 5) {
+      const msg = document.getElementById('edSaveMsg');
+      if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = '최대 5개까지 선택할 수 있습니다.'; setTimeout(() => { if (msg.textContent.includes('최대')) msg.textContent = ''; }, 2000); }
+      return;
+    }
+    el.classList.add('on'); arr.push(val);
+  }
+}
+
+// ── 사진 업로드 ───────────────────────────
+async function uploadPhoto(input, slot) {
+  const file=input.files?.[0]; if(!file) return;
+  const msg=document.getElementById('edSaveMsg');
+  if(msg){msg.style.color='';msg.textContent='업로드 중…';}
+  const form=new FormData();
+  form.append('photo', file);
+  form.append('slot', String(slot));
+  try {
+    const r=await fetch(`${BASE}/api/profiles/photos/${slot}`,{method:'POST',headers:AUTH,body:form});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok){if(msg){msg.style.color='var(--danger)';msg.textContent=data.error||'업로드 실패';}return;}
+    const url=toAbs(data.photo||data.photos?.[slot]);
+    const main=document.getElementById('edMainPhoto');
+    main.style.backgroundImage=`url(${url})`;main.style.backgroundSize='cover';main.style.backgroundPosition='center';
+    if(data.profile) profile=data.profile;
+    if(msg){msg.style.color='#27AE60';msg.textContent='✅ 사진 업로드 완료';}
+    setTimeout(()=>{if(msg)msg.textContent='';},2000);
+  } catch(e) {
+    if(msg){msg.style.color='var(--danger)';msg.textContent='업로드 실패';}
+  }
+  input.value='';
+}
+
+// ── 저장 ──────────────────────────────────
+async function saveProfile() {
+  const btn=document.getElementById('edSaveBtn');
+  const msg=document.getElementById('edBottomMsg');
+  const name=document.getElementById('ed_name')?.value.trim();
+  const age=document.getElementById('ed_age')?.value;
+  const bio=document.getElementById('ed_bio')?.value.trim();
+
+  if(!name){goStep(2);if(msg){msg.style.color='var(--danger)';msg.textContent='이름을 입력해주세요.';}return;}
+  if(!age) {goStep(2);if(msg){msg.style.color='var(--danger)';msg.textContent='나이를 입력해주세요.';}return;}
+
+  if(btn){btn.disabled=true;btn.textContent='저장 중…';}
+  if(msg){msg.style.color='';msg.textContent='';}
+
+  try {
+    const body={
+      name, age:parseInt(age), bio,
+      gender:selectedGender, region:selectedRegion, job:selectedJob,
+      height:parseInt(document.getElementById('ed_height')?.value||165),
+      weight:parseInt(document.getElementById('ed_weight')?.value||60),
+      taste:selectedTaste, hobby:selectedHobby,
+    };
+    const r=await fetch(`${BASE}/api/profiles/me`,{method:'POST',headers:{...AUTH,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await r.json();
+    if(!r.ok){if(msg){msg.style.color='var(--danger)';msg.textContent=data.error||'저장 실패';}return;}
+    profile={...profile,...body,...data};
+    localStorage.removeItem('pf_draft');
+    if(msg){msg.style.color='#27AE60';msg.textContent='✅ 저장됐습니다!';}
+    renderView(profile);
+    setTimeout(()=>showView(), 900);
+  } catch {
+    if(msg){msg.style.color='var(--danger)';msg.textContent='서버 오류';}
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='저장하기 →';}
+  }
+}
+
+function goBackFromProfile() {
+  if (fromPage === 'chat') {
+    window.location.href = fromRoom ? `chat.html?room=${encodeURIComponent(fromRoom)}` : 'chat.html';
+  } else {
+    history.back();
+  }
+}
+
+function logout() {
+  localStorage.removeItem('ss_token');
+  localStorage.removeItem('ss_user');
+  window.location.href=window.location.origin;
+}
+
+init();
+</script>
+</body>
+</html>

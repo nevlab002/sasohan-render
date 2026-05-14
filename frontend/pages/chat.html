@@ -1,0 +1,2427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>채팅 · CHEMI LINE</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<style>
+  body { background: var(--ivory); height: 100vh; overflow: hidden; }
+
+  /* ── Shell layout ── */
+  .ch-shell {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+    @media (max-width: 880px) {
+    .ch-shell { grid-template-columns: 280px 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    :root { --modal-blur: none; } /* 모바일 GPU 부하 방지 */
+    /* shell을 nav 아래 전체 채우기 */
+    .ch-shell {
+      grid-template-columns: 1fr !important;
+      position: fixed !important;
+      top: 52px !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      height: auto !important;
+      overflow: hidden !important;
+      width: 100% !important;
+    }
+
+    /* 목록: shell 안에서 전체 채우기 */
+    .ch-list {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      transform: translateX(0) !important;
+      transition: transform 0.28s ease !important;
+      overflow-y: auto !important;
+      z-index: 10;
+      background: var(--paper);
+    }
+    .ch-shell.room-open .ch-list {
+      transform: translateX(-100%) !important;
+    }
+
+    /* 패널: shell 안에서 전체 채우기 */
+    .ch-pane {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      transform: translateX(100%) !important;
+      transition: transform 0.28s ease !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      background: var(--ivory);
+    }
+    .ch-shell.room-open .ch-pane {
+      transform: translateX(0) !important;
+    }
+
+    /* 패널 내부 */
+    .ch-back-btn { display: inline-flex !important; }
+    .ch-pane-head {
+      padding: 10px 14px !important;
+      flex-shrink: 0 !important;
+      border-bottom: 1px solid var(--line);
+    }
+    .ch-body {
+      flex: 1 1 0 !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      padding: 12px 12px 8px !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    .ch-comp {
+      flex-shrink: 0 !important;
+      padding: 10px 12px !important;
+      border-top: 1px solid var(--line) !important;
+      background: var(--paper) !important;
+    }
+  }
+
+  /* ── Conversation list ── */
+  @media (max-width: 640px) {
+    body { overflow: hidden; }
+    .ch-shell {
+      contain: layout size style;
+    }
+    .ch-list {
+      transform: translate3d(0,0,0) !important;
+      transition: transform 180ms cubic-bezier(.2,0,0,1) !important;
+      overscroll-behavior: contain;
+      will-change: transform;
+    }
+    .ch-shell.room-open .ch-list {
+      transform: translate3d(-100%,0,0) !important;
+    }
+    .ch-pane {
+      transform: translate3d(100%,0,0) !important;
+      transition: transform 180ms cubic-bezier(.2,0,0,1) !important;
+      will-change: transform;
+      contain: layout style;
+    }
+    .ch-shell.room-open .ch-pane {
+      transform: translate3d(0,0,0) !important;
+    }
+    .ch-body {
+      overscroll-behavior: contain;
+      background: var(--ivory) !important;
+    }
+    .ch-item,
+    .ch-tool,
+    .ch-send,
+    .ch-comp-row,
+    .ch-empty-link,
+    .ch-summary-card,
+    .cg-topic {
+      transition-duration: 140ms !important;
+    }
+    .ch-summary-card:hover,
+    .ch-empty-link:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    .ch-empty-mark,
+    .ch-summary-card,
+    .ch-overview-count {
+      box-shadow: none !important;
+    }
+  }
+
+  .ch-list {
+    width: 340px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--line);
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: static;
+    transform: none;
+    height: 100%;
+  }
+
+  .ch-list-head {
+    padding: 24px 24px 18px; border-bottom: 1px solid var(--line);
+  }
+  .ch-list-head .eye {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--champagne-deep); margin-bottom: 10px;
+  }
+  .ch-list-head h2 {
+    font-family: var(--font-display); font-size: 26px;
+    font-weight: 400; letter-spacing: -0.015em; color: var(--ink);
+  }
+  .ch-list-head h2 em { font-style: italic; color: var(--wine); }
+
+  .ch-search {
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+  }
+  .ch-search input {
+    width: 100%; padding: 10px 14px;
+    background: var(--ivory); border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    font-size: 13px; outline: none; color: var(--text);
+  }
+  .ch-search input::placeholder { color: var(--text-subtle); }
+
+  .ch-list-body { flex: 1; overflow-y: auto; }
+
+  .ch-item {
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 14px; padding: 18px 20px;
+    border-bottom: 1px solid var(--line-soft);
+    cursor: pointer; transition: background 0.2s;
+    align-items: center; text-decoration: none; color: inherit;
+  }
+  .ch-item:hover { background: rgba(58,14,20,0.03); }
+  .ch-item.is-active { background: var(--ivory); border-left: 2px solid var(--champagne); }
+
+  .ch-item-pic {
+    width: 48px; height: 48px; border-radius: 50%;
+    position: relative; flex-shrink: 0;
+    background-size: cover; background-position: center top;
+    image-rendering: -webkit-optimize-contrast; image-rendering: smooth;
+  }
+  .ch-item-pic.online::after {
+    content: ''; position: absolute; bottom: 1px; right: 1px;
+    width: 10px; height: 10px; background: var(--champagne);
+    border-radius: 50%; border: 2px solid var(--paper);
+  }
+  .ch-item-mid { min-width: 0; }
+  .ch-item-name {
+    display: flex; align-items: baseline; gap: 8px;
+    font-family: var(--font-display); font-size: 17px;
+    font-weight: 400; color: var(--ink); margin-bottom: 4px;
+  }
+  .ch-item-name em { font-style: italic; color: var(--wine); }
+  .ch-item-name .age { font-size: 13px; color: var(--text-muted); font-weight: 300; }
+  .ch-item-msg {
+    font-size: 13px; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ch-item-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .ch-item-time {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.1em; color: var(--text-subtle); text-transform: uppercase;
+  }
+  .ch-item-badge {
+    min-width: 18px; height: 18px; padding: 0 6px;
+    background: var(--bordeaux); color: var(--ivory);
+    border-radius: var(--r-pill);
+    font-size: 10px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── Conversation pane ── */
+  .ch-pane { display: flex; flex-direction: column; background: var(--ivory); overflow: hidden; }
+
+  .ch-pane-head {
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 16px; background: var(--paper);
+  }
+  .ch-pane-who { display: flex; align-items: center; gap: 14px; }
+  .ch-pane-pic {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(160deg, #C9A48F 0%, #6B4F44 50%, #2F1F1A 100%);
+    background-size: cover; background-position: center top;
+    image-rendering: -webkit-optimize-contrast; image-rendering: smooth;
+    position: relative;
+  }
+  .ch-pane-pic::after {
+    content: ''; position: absolute; bottom: 1px; right: 1px;
+    width: 10px; height: 10px; background: var(--champagne);
+    border-radius: 50%; border: 2px solid var(--paper);
+  }
+  .ch-pane-name {
+    font-family: var(--font-display); font-size: 22px;
+    font-weight: 400; color: var(--ink); margin-bottom: 2px;
+    line-height: 1.1;
+  }
+  .ch-pane-name em { font-style: italic; color: var(--wine); }
+  .ch-pane-status {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--champagne-deep);
+  }
+  .ch-pane-tools { display: flex; gap: 8px; }
+  .ch-tool {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--ivory);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bordeaux); cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .ch-tool:hover { background: var(--bordeaux); color: var(--ivory); border-color: var(--bordeaux); }
+
+  /* Messages */
+  .ch-body {
+    flex: 1; overflow-y: auto; padding: 36px 32px;
+    background:
+      radial-gradient(ellipse at top, rgba(212,182,121,0.06), transparent 50%),
+      var(--ivory);
+  }
+  /* ch-body 패딩은 위 640px 블록에서 처리 */
+
+  .ch-empty-state {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 20px;
+  }
+  .ch-empty-inner { width: min(420px, 100%); }
+  .ch-empty-mark {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 24px;
+    border: 1px solid var(--line-gold);
+    border-radius: 50%;
+    position: relative;
+    background: rgba(250, 246, 238, 0.72);
+    box-shadow: var(--shadow-sm);
+  }
+  .ch-empty-mark::before,
+  .ch-empty-mark::after {
+    content: '';
+    position: absolute;
+    border: 1.5px solid var(--bordeaux);
+    background: var(--paper);
+  }
+  .ch-empty-mark::before {
+    width: 34px;
+    height: 22px;
+    left: 18px;
+    top: 20px;
+    border-radius: 13px 13px 13px 4px;
+    opacity: .78;
+  }
+  .ch-empty-mark::after {
+    width: 26px;
+    height: 18px;
+    right: 16px;
+    bottom: 20px;
+    border-radius: 11px 11px 4px 11px;
+    border-color: var(--champagne-deep);
+    opacity: .9;
+  }
+  .ch-empty-eye {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--champagne-deep);
+    margin-bottom: 12px;
+  }
+  .ch-empty-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .ch-empty-copy {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.8;
+    margin: 0 auto 24px;
+    max-width: 340px;
+  }
+  .ch-empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ch-empty-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--bordeaux);
+    background: var(--bordeaux);
+    color: var(--ivory);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background .2s, border-color .2s, transform .2s;
+  }
+  .ch-empty-link:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    transform: translateY(-1px);
+  }
+  .ch-empty-note {
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--text-subtle);
+  }
+
+  .ch-list-empty {
+    padding: 52px 24px;
+    text-align: center;
+  }
+  .ch-list-empty .ch-empty-mark {
+    width: 58px;
+    height: 58px;
+    margin-bottom: 18px;
+  }
+  .ch-list-empty .ch-empty-mark::before {
+    width: 26px;
+    height: 17px;
+    left: 14px;
+    top: 16px;
+  }
+  .ch-list-empty .ch-empty-mark::after {
+    width: 20px;
+    height: 14px;
+    right: 12px;
+    bottom: 15px;
+  }
+  .ch-list-empty h3 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .ch-list-empty p {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.65;
+    margin-bottom: 18px;
+  }
+
+  .ch-overview {
+    min-height: 100%;
+    padding: 6px 0 24px;
+  }
+  .ch-overview-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 22px;
+  }
+  .ch-overview-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3.8vw, 40px);
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1.18;
+  }
+  .ch-overview-copy {
+    margin-top: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .ch-overview-count {
+    min-width: 118px;
+    padding: 12px 16px;
+    border: 1px solid var(--line-gold);
+    border-radius: var(--r-sm);
+    text-align: center;
+    background: rgba(250,246,238,.64);
+  }
+  .ch-overview-count b {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--bordeaux);
+  }
+  .ch-overview-count span {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: .14em;
+    color: var(--text-subtle);
+  }
+  .ch-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .ch-summary-card {
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: rgba(250,246,238,.76);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .ch-summary-card:hover {
+    border-color: rgba(58,14,20,.34);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+  .ch-summary-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .ch-summary-pic {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: linear-gradient(135deg,#9B7275,#321E20);
+    background-size: cover;
+    background-position: center top;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ivory);
+    font-family: var(--font-display);
+    font-size: 18px;
+  }
+  .ch-summary-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .ch-summary-state {
+    margin-top: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--champagne-deep);
+  }
+  .ch-summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .ch-summary-stat {
+    min-height: 64px;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--r-xs);
+    padding: 9px 8px;
+    background: rgba(245,239,230,.58);
+  }
+  .ch-summary-stat b {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--bordeaux);
+  }
+  .ch-summary-stat span {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .ch-calendar-strip {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-radius: var(--r-sm);
+    background: var(--ivory);
+    border: 1px solid var(--line-soft);
+  }
+  .ch-calendar-date {
+    height: 54px;
+    border-radius: var(--r-xs);
+    border: 1px solid var(--line-gold);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper);
+  }
+  .ch-calendar-date .month {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: .14em;
+    color: var(--champagne-deep);
+  }
+  .ch-calendar-date .day {
+    font-family: var(--font-display);
+    font-size: 24px;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .ch-calendar-main {
+    min-width: 0;
+  }
+  .ch-calendar-main b {
+    display: block;
+    font-size: 13px;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ch-calendar-main span {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ch-day {
+    text-align: center; margin: 0 0 24px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--text-subtle);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ch-day::before, .ch-day::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  /* Manager system note */
+  .ch-sys {
+    max-width: 560px; margin: 0 auto 28px;
+    padding: 18px 22px; background: rgba(212,182,121,0.1);
+    border: 1px solid var(--line-gold); border-radius: var(--r-md);
+    text-align: center;
+  }
+  .ch-sys .lbl {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--champagne-deep); margin-bottom: 8px;
+  }
+  .ch-sys p {
+    font-family: var(--font-display); font-size: 15px;
+    font-style: italic; line-height: 1.55; color: var(--ink);
+  }
+
+  /* Bubbles */
+  .ch-msg {
+    max-width: 540px; margin-bottom: 16px;
+    display: flex; gap: 12px;
+    box-sizing: border-box;
+    word-break: break-word;
+  }
+  .ch-msg-pic {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(160deg, #C9A48F 0%, #6B4F44 50%, #2F1F1A 100%);
+    flex-shrink: 0;
+  }
+
+  /* 타이핑 인디케이터 */
+  #chTypingBar {
+    display: none; align-items: center; gap: 10px;
+    padding: 8px 16px 4px; font-size: 12px; color: var(--text-muted);
+    font-family: var(--font-body);
+  }
+  .ch-typing-dots { display: inline-flex; gap: 3px; align-items: center; }
+  .ch-typing-dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--champagne-deep); opacity: 0.4;
+    animation: ch-dot-bounce 1.2s infinite;
+  }
+  .ch-typing-dots span:nth-child(2) { animation-delay: .2s; }
+  .ch-typing-dots span:nth-child(3) { animation-delay: .4s; }
+  @keyframes ch-dot-bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: .4; }
+    40%            { transform: translateY(-4px); opacity: 1; }
+  }
+  .ch-msg-bub {
+    padding: 14px 18px;
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: 4px 18px 18px 18px;
+    font-size: 14px; line-height: 1.65; color: var(--ink);
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .ch-msg-time {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.1em; color: var(--text-subtle);
+    margin-top: 6px;
+  }
+
+  .ch-msg.me {
+    margin-left: auto; flex-direction: row-reverse;
+  }
+  .ch-msg.me .ch-msg-bub {
+    background: var(--bordeaux); color: var(--ivory); border-color: var(--bordeaux);
+    border-radius: 18px 4px 18px 18px;
+  }
+  .ch-msg.me .ch-msg-time { text-align: right; }
+  .ch-msg.me .ch-msg-pic { display: none; }
+
+  @media (max-width: 640px) {
+    .ch-msg { max-width: calc(100vw - 32px); }
+    .ch-msg-bub { font-size: 14px; padding: 12px 14px; }
+    .ch-empty-state {
+      align-items: flex-start;
+      padding: 56px 18px 28px;
+    }
+    .ch-empty-mark {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 20px;
+    }
+    .ch-empty-copy { font-size: 13px; }
+    .ch-overview-head {
+      display: block;
+      margin-bottom: 16px;
+    }
+    .ch-overview-count {
+      margin-top: 14px;
+      width: 100%;
+    }
+    .ch-summary-stats {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* Composer */
+  .ch-comp {
+    padding: 18px 24px 22px;
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .ch-comp-row {
+    display: flex; align-items: end; gap: 10px;
+    background: var(--ivory); border: 1px solid var(--line);
+    border-radius: var(--r-lg); padding: 10px 10px 10px 18px;
+    transition: border-color 0.25s;
+  }
+  .ch-comp-row:focus-within { border-color: var(--bordeaux); }
+  .ch-comp-input {
+    flex: 1; resize: none; max-height: 120px;
+    border: none; outline: none; background: transparent;
+    font-family: var(--font-body); font-size: 14.5px;
+    color: var(--ink); line-height: 1.6;
+    padding: 6px 0;
+  }
+  .ch-comp-input::placeholder { color: var(--text-subtle); }
+  .ch-comp-input:disabled {
+    cursor: default;
+    color: var(--text-subtle);
+  }
+  .ch-attach {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--line); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); cursor: pointer;
+  }
+  .ch-attach:hover { border-color: var(--bordeaux); color: var(--bordeaux); }
+  .ch-send {
+    padding: 10px 22px;
+    background: var(--bordeaux); color: var(--ivory);
+    border: none; border-radius: var(--r-pill);
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ch-send:hover { background: var(--ink); }
+  .ch-send:disabled {
+    cursor: default;
+    opacity: .38;
+  }
+  .ch-send:disabled:hover { background: var(--bordeaux); }
+
+  .ch-comp-foot {
+    margin-top: 10px; display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+  .ch-comp-foot a { color: var(--champagne-deep); text-decoration: none; }
+
+  /* ── 신뢰 UI ── */
+  .ch-verified { display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#27AE60;font-family:var(--font-mono);letter-spacing:.1em; }
+  .ch-last-seen { font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--text-subtle);margin-top:2px; }
+  .ch-manager-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:rgba(212,182,121,.12);border:1px solid rgba(212,182,121,.25);font-size:10px;color:var(--champagne-deep);font-family:var(--font-mono);letter-spacing:.1em; }
+  .ch-trust-bar { background:var(--cream);border-bottom:1px solid var(--line);padding:8px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap; }
+
+  /* 모바일 */
+  /* 640px 쿼리는 위에서 통합 처리 */
+  /* 케미 오버레이 모바일 */
+  @media (max-width: 640px) {
+    #cgOverlay { align-items: flex-start !important; padding-top: 20px; }
+    #cgOverlay > div { padding: 16px 12px; }
+    #cg-topic { font-size: clamp(36px, 11vw, 64px) !important; }
+    #cg-cd { width: 56px; height: 56px; font-size: 22px; }
+    #cg-input { font-size: 16px !important; }
+    .ch-comp-input { font-size: 16px !important; }
+    #cg-game { padding-bottom: 40px; }
+  }
+
+  /* 케미라인 게임 주제 버튼 */
+  .cg-topic{padding:13px 8px;border:1px solid rgba(212,182,121,.25);border-radius:var(--r-sm);font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--champagne);text-align:center;background:transparent;cursor:pointer;transition:background .2s,color .2s,border-color .2s;}
+  .cg-topic:hover{border-color:rgba(212,182,121,.5);background:rgba(212,182,121,.08);}
+  .cg-topic.on{background:rgba(212,182,121,.18);border-color:var(--champagne);color:var(--ivory);}
+
+  @media (max-width: 640px), (prefers-reduced-motion: reduce) {
+    .ch-typing-dots span { animation: none !important; }
+    .ch-tool:hover,
+    .ch-attach:hover {
+      background: var(--ivory);
+      color: var(--bordeaux);
+    }
+    .ch-send:hover {
+      background: var(--bordeaux);
+      color: var(--ivory);
+    }
+    #cgOverlay {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="site-logo">CHEMI&nbsp;LINE</a>
+  <div class="site-nav-links">
+    <a href="match.html" id="chNavMatchBtn" class="snb">매칭</a>
+    <a href="chat.html" class="snb active">채팅</a>
+    <a href="profile.html" class="snb">프로필</a>
+    <a href="inquiry.html" class="snb">문의</a>
+      <button class="snb logout" onclick="logout()">로그아웃</button>
+  </div>
+</nav>
+
+<div class="ch-shell">
+  <!-- Conversation list -->
+  <aside class="ch-list">
+    <div class="ch-list-head">
+      <div class="eye">Conversations · 04</div>
+      <h2>나의 <em>대화</em></h2>
+    </div>
+    <div class="ch-search">
+      <input placeholder="이름 또는 메세지 검색">
+    </div>
+    <div class="ch-list-body" id="chListBody">
+      <div style="padding:40px 24px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;">Loading…</div>
+    </div>
+  </aside>
+
+  <!-- Active conversation -->
+  <main class="ch-pane">
+    <div class="ch-pane-head">
+      <div class="ch-pane-who">
+        <button class="ch-back-btn" id="chMobileBackBtn" onclick="showList()">‹</button>
+        <div class="ch-pane-pic" id="chHeadPic" onclick="openPartnerProfile()" style="cursor:pointer;"></div>
+        <div>
+          <div class="ch-pane-name" id="chPartnerName">—</div>
+          <div class="ch-last-seen" id="chLastSeen"></div>
+        </div>
+      </div>
+      <div class="ch-pane-tools">
+        <a href="#" id="chProfileLink" onclick="event.preventDefault();openPartnerProfile()" class="ch-tool" title="프로필">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="9" r="4"/><path d="M3 21c1.5-4.5 5-7 9-7s7.5 2.5 9 7"/></svg>
+        </a>
+        <button onclick="proposeMeeting()" class="ch-tool" title="만남 제안">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        </button>
+        <button onclick="startChemiGame()" class="ch-tool" title="캐미라인 게임" id="chemiBtn" style="color:var(--champagne-deep);font-size:16px;border:none;background:none;cursor:pointer;padding:6px 8px;">
+          ✦
+        </button>
+        <button class="ch-tool" onclick="showRoomMenu()" title="더보기">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- WS 연결 상태 바 -->
+    <div id="chConnBar" style="display:none;background:#E67E22;color:#fff;text-align:center;font-size:12px;padding:6px 16px;font-family:var(--font-body);">
+      ⚡ 연결이 끊어졌습니다. 재연결 중...
+    </div>
+
+    <!-- 매칭 종료 안내 바 -->
+    <div id="chEndedBar" style="display:none;background:#C0392B;color:#fff;text-align:center;font-size:13px;padding:10px 16px;font-family:var(--font-body);">
+      💔 상대방이 매칭을 종료했습니다. 더 이상 메시지를 보낼 수 없습니다.
+    </div>
+
+    <!-- 신뢰 정보 바 -->
+    <div class="ch-trust-bar" id="chTrustBar" style="display:none;">
+      <span class="ch-verified" id="chVerified" style="display:none;">✓ 신원 인증</span>
+      <span class="ch-manager-badge" id="chManagerBadge" style="display:none;">✦ 매니저 담당</span>
+      <span id="chReportResult" style="display:none;font-size:11px;color:var(--text-muted);">신고 처리 중</span>
+    </div>
+
+    <div class="ch-body" id="chBody">
+      <div class="ch-empty-state">
+        <div class="ch-empty-inner">
+          <div class="ch-empty-mark" aria-hidden="true"></div>
+          <div class="ch-empty-eye">CHEMI LINE</div>
+          <h2 class="ch-empty-title">아직 열린 대화가 없어요</h2>
+          <p class="ch-empty-copy">매칭에서 마음이 가는 사람을 만나면, 이곳에 첫 대화가 차분히 쌓이기 시작합니다.</p>
+          <div class="ch-empty-actions">
+            <a href="match.html" class="ch-empty-link">매칭 보러가기
+              <svg width="12" height="10" viewBox="0 0 16 12" fill="none" aria-hidden="true"><path d="M1 6h14m0 0L10 1m5 5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </a>
+          </div>
+          <div class="ch-empty-note">대화가 시작되면 채팅방 목록에 바로 표시됩니다</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 차단 상태 배너 -->
+    <div id="chBlockBar" style="display:none;align-items:center;justify-content:space-between;padding:8px 16px;background:#FFF3E0;border-top:1px solid #FFB74D;font-size:12px;color:#E65100;flex-shrink:0;">
+      <span>🚫 상대방을 차단했습니다. 상대방의 메시지를 받지 않습니다.</span>
+      <button onclick="unblockUser()" style="margin-left:12px;padding:4px 12px;border-radius:999px;border:1px solid #E65100;background:transparent;color:#E65100;font-size:11px;cursor:pointer;font-family:var(--font-body);">차단 해제</button>
+    </div>
+
+    <!-- 타이핑 인디케이터 -->
+    <div id="chTypingBar">
+      <div class="ch-typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <span id="chTypingName">상대방</span>이 입력 중...
+    </div>
+
+    <div class="ch-comp">
+      <div class="ch-comp-row">
+        <button class="ch-attach" title="사진 첨부">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15V7a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h8"/><circle cx="9" cy="9" r="2"/><path d="M3 17l5-5 5 5"/></svg>
+        </button>
+        <textarea class="ch-comp-input" id="chInput" rows="1" style="font-size:16px;" placeholder="채팅방이 열리면 메시지를 보낼 수 있어요." disabled></textarea>
+        <button class="ch-send" id="chSendBtn" onclick="sendMsg()" disabled>전송 <svg width="12" height="10" viewBox="0 0 16 12" fill="none"><path d="M1 6h14m0 0L10 1m5 5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="ch-comp-foot">
+        <span>Enter — 전송 · Shift+Enter — 줄바꿈</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 케미라인 게임 오버레이 -->
+<div id="cgOverlay" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(20,5,6,.95);backdrop-filter:var(--modal-blur,blur(12px));align-items:center;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 16px;">
+  <div style="max-width:440px;width:100%;text-align:center;position:relative;">
+
+    <!-- 1. 주제 선택 (신청자) -->
+    <div id="cg-select" style="display:none;">
+      <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--champagne);margin-bottom:28px;">CHEMI LINE · 케미 게임</div>
+      <p style="font-size:14px;line-height:1.9;color:rgba(245,239,230,.6);margin-bottom:6px;">주제를 고르고 10초 안에 같은 단어를 입력하면 <b style="color:var(--champagne);">+10점</b></p>
+      <p style="font-size:13px;color:rgba(245,239,230,.4);margin-bottom:28px;">3번 틀리면 게임 종료 · 점수는 이달 랭킹에 등록됩니다</p>
+      <div style="font-size:12px;color:rgba(245,239,230,.45);margin-bottom:14px;font-family:var(--font-mono);letter-spacing:.1em;">첫 라운드 주제 선택</div>
+      <div id="cg-topicGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:32px;"></div>
+      <button onclick="sendChemiInvite()" id="cg-startBtn" style="width:100%;padding:15px;border-radius:999px;background:var(--champagne);color:var(--ink);border:none;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font-body);">게임 시작 ✦</button>
+      <button onclick="cgClose()" style="margin-top:10px;width:100%;padding:12px;border-radius:999px;border:1px solid rgba(245,239,230,.15);background:transparent;color:rgba(245,239,230,.45);cursor:pointer;font-size:13px;font-family:var(--font-body);">취소</button>
+    </div>
+
+    <!-- 2. 수락 대기 (신청자) -->
+    <div id="cg-waiting" style="display:none;">
+      <div style="font-size:52px;margin-bottom:20px;">⏳</div>
+      <h3 style="font-family:var(--font-display);font-size:28px;font-weight:300;color:var(--ivory);margin-bottom:10px;">초대 전송됨</h3>
+      <p id="cg-waitMsg" style="font-size:14px;color:rgba(245,239,230,.55);margin-bottom:32px;"></p>
+      <button onclick="cgCancelInvite()" style="padding:12px 32px;border-radius:999px;border:1px solid rgba(245,239,230,.2);background:transparent;color:rgba(245,239,230,.5);cursor:pointer;font-size:13px;font-family:var(--font-body);">초대 취소</button>
+    </div>
+
+    <!-- 3. 초대 받음 (수락자) -->
+    <div id="cg-invite" style="display:none;">
+      <div style="font-size:52px;margin-bottom:20px;">🎮</div>
+      <h3 style="font-family:var(--font-display);font-size:28px;font-weight:300;color:var(--ivory);margin-bottom:10px;">케미라인 초대</h3>
+      <p style="font-size:14px;color:rgba(245,239,230,.65);margin-bottom:8px;">상대방이 케미라인 게임을 제안했어요!</p>
+      <div id="cg-invTopic" style="font-family:var(--font-display);font-size:32px;color:var(--champagne);margin-bottom:32px;">—</div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button onclick="cgReject()" style="padding:14px 32px;border-radius:999px;border:1px solid rgba(245,239,230,.2);background:transparent;color:rgba(245,239,230,.55);cursor:pointer;font-size:14px;font-family:var(--font-body);">거절</button>
+        <button onclick="cgAccept()" style="padding:14px 40px;border-radius:999px;background:var(--champagne);color:var(--ink);border:none;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font-body);">수락 ✦</button>
+      </div>
+    </div>
+
+    <!-- 4. 게임 진행 -->
+    <div id="cg-game" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;color:var(--champagne);">ROUND <span id="cg-round">1</span></div>
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;color:rgba(245,239,230,.5);">오답 <span id="cg-wrong">0</span> / 3</div>
+        <div style="font-family:var(--font-display);font-size:18px;color:var(--champagne);">✦ <span id="cg-score">0</span>점</div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:rgba(245,239,230,.35);margin-bottom:10px;">주제</div>
+        <div id="cg-topic" style="font-family:var(--font-display);font-size:clamp(52px,12vw,84px);font-weight:300;color:var(--ivory);line-height:1;">—</div>
+      </div>
+
+      <div id="cg-cd" style="width:68px;height:68px;border-radius:50%;border:2px solid var(--champagne);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-family:var(--font-display);font-size:28px;color:var(--champagne);">—</div>
+      <div id="cg-status" style="font-size:13px;color:rgba(245,239,230,.5);margin-bottom:18px;min-height:18px;"></div>
+
+      <div id="cg-inputWrap" style="display:none;">
+        <input type="text" id="cg-input" maxlength="20" inputmode="text" placeholder="단어를 입력하세요"
+          onkeydown="if(event.key==='Enter')cgSubmit()"
+          style="width:100%;padding:15px 20px;border-radius:999px;border:1.5px solid rgba(212,182,121,.4);background:rgba(245,239,230,.06);color:var(--ivory);font-size:16px;font-family:var(--font-display);text-align:center;outline:none;letter-spacing:.06em;box-sizing:border-box;">
+        <button onclick="cgSubmit()" id="cg-submitBtn" style="margin-top:10px;width:100%;padding:13px;border-radius:999px;background:var(--champagne);color:var(--ink);border:none;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font-body);">제출</button>
+      </div>
+
+      <div id="cg-waitAns" style="display:none;">
+        <div style="font-size:14px;color:rgba(245,239,230,.6);">내 답변: <b style="color:var(--champagne);" id="cg-myAns">—</b></div>
+        <div style="margin-top:10px;font-size:12px;color:rgba(245,239,230,.35);">상대방 답변 대기 중...</div>
+      </div>
+
+      <button onclick="cgExit()" style="position:absolute;top:0;right:0;background:none;border:none;cursor:pointer;color:rgba(245,239,230,.25);font-size:10px;font-family:var(--font-mono);letter-spacing:.12em;text-transform:uppercase;padding:8px;">나가기</button>
+    </div>
+
+    <!-- 5. 게임 종료 -->
+    <div id="cg-end" style="display:none;">
+      <div id="cg-endIcon" style="font-size:64px;margin-bottom:16px;"></div>
+      <h3 id="cg-endTitle" style="font-family:var(--font-display);font-size:34px;font-weight:300;color:var(--ivory);margin-bottom:10px;"></h3>
+      <p id="cg-endDesc" style="font-size:14px;color:rgba(245,239,230,.6);margin-bottom:20px;line-height:1.8;"></p>
+      <div id="cg-endScore" style="font-family:var(--font-display);font-size:52px;color:var(--champagne);margin-bottom:28px;"></div>
+      <button onclick="cgClose()" style="width:100%;padding:14px;border-radius:999px;background:var(--champagne);color:var(--ink);border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-body);">채팅으로 돌아가기</button>
+    </div>
+
+  </div>
+</div>
+<script src="../assets/api.js"></script>
+<script>
+const _token = localStorage.getItem('ss_token');
+const _user  = (() => { try { return JSON.parse(localStorage.getItem('ss_user')); } catch { return null; } })();
+if (!_token || !_user) { window.location.href = window.location.origin; }
+
+const BASE = window.location.origin;
+const H    = { Authorization: `Bearer ${_token}` };
+const me   = _user;
+
+let ws = null, partnerInfo = null, activeRoomId = null, _isPartnerBlocked = false;
+
+function roomStatusLabel(status) {
+  return ({
+    chatting: '대화중',
+    scheduling: '일정 조율중',
+    met: '만남 완료',
+    closed: '종료'
+  })[status] || '대화중';
+}
+
+function formatDateParts(value) {
+  if (!value) return { month: '--', day: '--', label: '아직 약속이 없습니다' };
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return { month: '--', day: '--', label: '일정 확인 필요' };
+  return {
+    month: `${d.getMonth() + 1}월`,
+    day: String(d.getDate()).padStart(2, '0'),
+    label: d.toLocaleString('ko', { month:'long', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' })
+  };
+}
+
+function summarizePlan(room) {
+  const prop = room.proposal;
+  if (!prop?.date_time) {
+    return {
+      ...formatDateParts(null),
+      title: '만남 약속 없음',
+      detail: '대화가 무르익으면 약속을 제안해보세요'
+    };
+  }
+  const date = formatDateParts(prop.date_time);
+  const status = prop.status === 'accepted' ? '확정' : prop.status === 'pending' ? '조율중' : '지난 제안';
+  return {
+    ...date,
+    title: `${status} · ${prop.place || '장소 미정'}`,
+    detail: date.label
+  };
+}
+
+function buildOverviewRooms(fallbackRooms) {
+  return (fallbackRooms || []).map(r => ({
+    room_id: r.room_id || r.id,
+    partner_id: r.partner_id,
+    partner_name: r.partner_name || '상대방',
+    partner_photos: r.partner_photos || (r.partner_photo ? [r.partner_photo] : []),
+    message_count: r.last_message ? 1 : 0,
+    photo_count: r.last_msg_type === 'photo' ? 1 : 0,
+    unread: parseInt(r.unread || r.unread_count || 0),
+    room_status: 'chatting',
+    proposal: null,
+    chemi: null
+  }));
+}
+
+async function renderChatOverview(fallbackRooms) {
+  const body = document.getElementById('chBody');
+  const input = document.getElementById('chInput');
+  const sendBtn = document.getElementById('chSendBtn');
+  if (!body || activeRoomId) return;
+  if (input) {
+    input.disabled = true;
+    input.placeholder = '왼쪽에서 채팅방을 선택하면 메시지를 보낼 수 있어요.';
+  }
+  if (sendBtn) sendBtn.disabled = true;
+
+  body.innerHTML = '<div style="text-align:center;padding:56px;color:var(--text-muted);font-size:13px;">대화 요약을 불러오는 중...</div>';
+
+  let rooms = buildOverviewRooms(fallbackRooms);
+  try {
+    const r = await fetch(`${BASE}/api/chat/summary`, { headers: H });
+    if (r.ok) {
+      const d = await r.json();
+      if (Array.isArray(d.rooms)) rooms = d.rooms;
+    }
+  } catch {}
+
+  const totalMessages = rooms.reduce((sum, r) => sum + Number(r.message_count || 0), 0);
+  const totalPhotos = rooms.reduce((sum, r) => sum + Number(r.photo_count || 0), 0);
+  const totalPlans = rooms.reduce((sum, r) => sum + (r.proposal?.date_time ? 1 : 0), 0);
+
+  body.innerHTML = `
+    <section class="ch-overview">
+      <div class="ch-overview-head">
+        <div>
+          <div class="ch-empty-eye">CHAT CALENDAR</div>
+          <h2 class="ch-overview-title">대화 흐름을 한눈에 볼 수 있어요</h2>
+          <p class="ch-overview-copy">회원별로 대화 수, 사진, 케미게임 기록, 만남 약속을 정리했습니다. 카드를 누르면 바로 해당 채팅방으로 이동합니다.</p>
+        </div>
+        <div class="ch-overview-count">
+          <b>${rooms.length}</b>
+          <span>현재 대화</span>
+        </div>
+      </div>
+      <div class="ch-summary-stats" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:18px;">
+        <div class="ch-summary-stat"><b>${totalMessages}</b><span>전체 메시지</span></div>
+        <div class="ch-summary-stat"><b>${totalPhotos}</b><span>주고받은 사진</span></div>
+        <div class="ch-summary-stat"><b>${totalPlans}</b><span>등록된 약속</span></div>
+      </div>
+      <div class="ch-overview-grid">
+        ${rooms.map(room => {
+          const rId = room.room_id || room.id;
+          const name = room.partner_name || '상대방';
+          const raw = room.partner_photos?.[0] || room.partner_photo || '';
+          const photo = raw ? (raw.startsWith('http') ? raw : BASE + raw) : '';
+          const plan = summarizePlan(room);
+          const chemi = room.chemi;
+          return `<article class="ch-summary-card" onclick="selectRoom('${rId}','${encodeURIComponent(name)}','${photo}','${room.partner_id || ''}')">
+            <div class="ch-summary-top">
+              <div class="ch-summary-pic" style="${photo ? `background-image:url(${photo});` : ''}">${photo ? '' : safeText(name.charAt(0) || '?')}</div>
+              <div>
+                <div class="ch-summary-name">${safeText(name)}</div>
+                <div class="ch-summary-state">${roomStatusLabel(room.room_status)}${Number(room.unread || 0) > 0 ? ` · 안읽음 ${room.unread}` : ''}</div>
+              </div>
+            </div>
+            <div class="ch-summary-stats">
+              <div class="ch-summary-stat"><b>${Number(room.message_count || 0)}</b><span>대화</span></div>
+              <div class="ch-summary-stat"><b>${Number(room.photo_count || 0)}</b><span>사진</span></div>
+              <div class="ch-summary-stat"><b>${chemi ? Number(chemi.best_score || chemi.score || 0) : 0}</b><span>케미 점수</span></div>
+            </div>
+            <div class="ch-calendar-strip">
+              <div class="ch-calendar-date">
+                <span class="month">${safeText(plan.month)}</span>
+                <span class="day">${safeText(plan.day)}</span>
+              </div>
+              <div class="ch-calendar-main">
+                <b>${safeText(plan.title)}</b>
+                <span>${safeText(plan.detail)} · 케미 ${chemi ? `${chemi.total || 1}회` : '기록 없음'}</span>
+              </div>
+            </div>
+          </article>`;
+        }).join('')}
+      </div>
+    </section>`;
+}
+
+// ── 채팅방 목록 ────────────────────────────
+async function loadRooms() {
+  const wrap = document.getElementById('chListBody');
+  if (!wrap) return;
+  // 기존 목록이 없을 때만 로딩 표시 (재로드 시 깜박임 방지)
+  if (!wrap.querySelector('.ch-item')) {
+    wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">불러오는 중...</div>';
+  }
+  try {
+    const r = await fetch(`${BASE}/api/chat`, { headers: H });
+    if (r.status === 401) {
+      window.location.href = `${window.location.origin}/pages/login.html`;
+      return;
+    }
+    const rooms = r.ok ? await r.json() : [];
+    const urlRoom = new URLSearchParams(location.search).get('room');
+    if (!Array.isArray(rooms) || !rooms.length) {
+      wrap.innerHTML = `<div class="ch-list-empty">
+        <div class="ch-empty-mark" aria-hidden="true"></div>
+        <h3>채팅방이 없습니다</h3>
+        <p>매칭이 성사되면 이곳에 대화가 표시됩니다.</p>
+        <a href="match.html" class="btn btn-primary btn-sm">매칭 보러가기</a>
+      </div>`;
+      return;
+    }
+    const newHtml = rooms.map(r => {
+      const rId   = r.room_id || r.id;
+      const pName = r.partner_name || '상대방';
+      const raw   = r.partner_photos?.[0] || r.partner_photo || '';
+      const abs   = raw ? (raw.startsWith('http') ? raw : BASE + raw) : '';
+      const unread= parseInt(r.unread || r.unread_count || 0);
+      const lastAt= r.last_at ? (() => {
+        const d = new Date(r.last_at), now = new Date();
+        const diff = now - d;
+        if (diff < 86400000) return d.toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'});
+        return d.toLocaleDateString('ko',{month:'numeric',day:'numeric'});
+      })() : '';
+      return `<a href="#" onclick="event.preventDefault();selectRoom('${rId}','${encodeURIComponent(pName)}','${abs}','${r.partner_id||''}')"
+        class="ch-item" id="room-item-${rId}" data-room="${rId}">
+        <div class="ch-item-pic" style="${abs?`background-image:url(${abs});background-size:cover;background-position:center top;`:'background:linear-gradient(135deg,#9B7275,#321E20);display:flex;align-items:center;justify-content:center;'}">
+          ${abs?'': `<span style="color:rgba(245,239,230,.8);font-family:var(--font-display);font-size:18px;font-weight:400;line-height:1;">${pName.charAt(0)||'?'}</span>`}
+        </div>
+        <div class="ch-item-mid">
+          <div class="ch-item-name">${pName}</div>
+          <div class="ch-item-msg">${
+            r.last_message
+              ? (r.last_msg_type === 'photo'       ? '📷 사진'
+               : r.last_msg_type === 'meet_propose' ? '📅 만남 제안'
+               : r.last_msg_type === 'system'       ? '📢 ' + r.last_message.slice(0,24)
+               : r.last_message.slice(0,30))
+              : '대화를 시작해보세요'
+          }</div>
+        </div>
+        <div class="ch-item-meta">
+          <span class="ch-item-time">${lastAt}</span>
+          ${unread>0?`<span class="ch-item-badge">${unread}</span>`:''}
+        </div>
+      </a>`;
+    }).join('');
+    wrap.innerHTML = newHtml;
+    if (!urlRoom && !activeRoomId) renderChatOverview(rooms);
+
+    // 현재 열려있던 방 활성 상태 복원
+    if (activeRoomId) {
+      document.getElementById(`room-item-${activeRoomId}`)?.classList.add('is-active');
+    }
+
+    // URL 파라미터로 자동 선택 (최초 1회만)
+    if (urlRoom && !activeRoomId) {
+      const found = rooms.find(r=>(r.room_id||r.id)===urlRoom);
+      if (found) {
+        const raw=found.partner_photos?.[0]||found.partner_photo||'';
+        const abs=raw?(raw.startsWith('http')?raw:BASE+raw):'';
+        selectRoom(urlRoom, encodeURIComponent(found.partner_name||'상대방'), abs, found.partner_id||'');
+      }
+    }
+  } catch(e) {
+    console.error('채팅방 로드 오류:', e);
+    const errWrap = document.getElementById('chListBody');
+    if (errWrap) errWrap.innerHTML = `
+      <div style="padding:40px 24px;text-align:center;">
+        <div style="color:#C0392B;font-size:13px;margin-bottom:12px;">⚠️ 불러오기 실패</div>
+        <div style="color:var(--text-muted);font-size:12px;margin-bottom:16px;">${e.message}</div>
+        <button onclick="loadRooms()" style="padding:8px 20px;border-radius:999px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:13px;">다시 시도</button>
+      </div>`;
+  }
+  // 모바일: URL에 room 파라미터 있으면 바로 채팅방 열기
+  if (window.innerWidth <= 640) {
+    const urlRoom = new URLSearchParams(location.search).get('room');
+    const shell = document.querySelector('.ch-shell');
+    if (shell && urlRoom) shell.classList.add('room-open');
+  }
+}
+
+// ── 채팅방 선택 ────────────────────────────
+async function selectRoom(rId, pNameEncoded, pPhoto, pId) {
+  const pName = decodeURIComponent(pNameEncoded);
+  activeRoomId = rId;
+  document.querySelectorAll('.ch-item').forEach(el=>el.classList.remove('is-active'));
+  // 모바일: ch-shell에 room-open 추가 → CSS가 목록 숨기고 패널 표시
+  if (window.innerWidth <= 640) {
+    const shell = document.querySelector('.ch-shell');
+    if (shell) shell.classList.add('room-open');
+  }
+  const item = document.getElementById(`room-item-${rId}`);
+  if (item) {
+    item.classList.add('is-active');
+    // 뱃지 제거 (읽음 처리)
+    item.querySelector('.ch-item-badge')?.remove();
+  }
+  const nameEl=document.getElementById('chPartnerName');
+  const picEl =document.getElementById('chHeadPic');
+  const statEl=document.getElementById('chPartnerStatus');
+  if (nameEl) nameEl.textContent = pName;
+  if (statEl) statEl.textContent = '';
+  if (picEl) {
+    picEl.style.backgroundImage = pPhoto ? `url(${pPhoto})` : '';
+    picEl.style.backgroundSize = 'cover';
+    picEl.style.backgroundPosition = 'center top';
+  }
+  // partner_id가 빈 문자열이면 null로 처리
+  partnerInfo = { partner_name:pName, partner_photo:pPhoto, partner_id:pId||null, room_id:rId };
+
+  // 입력창 상태 초기화
+  const chInput2 = document.getElementById('chInput');
+  const chSendBtn2 = document.getElementById('chSendBtn');
+  if (chInput2)   { chInput2.disabled = false; chInput2.placeholder = '진심을 담은 한 줄을 적어보세요...'; }
+  if (chSendBtn2) chSendBtn2.disabled = false;
+  document.getElementById('chBlockedByBar')?.remove();
+
+  // 차단 상태 초기화 후 확인 (내가 차단 / 상대가 나를 차단)
+  _isPartnerBlocked = false;
+  const blockBar = document.getElementById('chBlockBar');
+  if (blockBar) blockBar.style.display = 'none';
+  if (pId) {
+    Promise.all([
+      fetch(`${BASE}/api/safety/block/${pId}`, { headers: H }).then(r => r.ok ? r.json() : null),
+      fetch(`${BASE}/api/safety/blocked-by/${pId}`, { headers: H }).then(r => r.ok ? r.json() : null)
+    ]).then(([iBlocked, blockedByPartner]) => {
+      if (iBlocked?.blocked) {
+        _isPartnerBlocked = true;
+        if (blockBar) blockBar.style.display = 'flex';
+      }
+      if (blockedByPartner?.blocked) showBlockedByBanner();
+    }).catch(() => {});
+  }
+  const roomLink = document.querySelector('a[href="room.html"]');
+  if (roomLink) roomLink.href = `room.html?room=${rId}`;
+  const body = document.getElementById('chBody');
+  if (body) body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">불러오는 중...</div>';
+  try {
+    const r = await fetch(`${BASE}/api/chat/${rId}/messages?limit=50`, { headers: H });
+
+    let msgs = [];
+    let errData = {};
+
+    try {
+      const parsed = await r.json();
+      if (Array.isArray(parsed)) msgs = parsed;
+      else errData = parsed || {};
+    } catch {}
+
+    if (!r.ok) {
+      const message = errData.error || `메시지를 불러오지 못했습니다. (${r.status})`;
+      if (body) {
+        body.innerHTML = `<div style="text-align:center;padding:40px;color:#C0392B;font-size:13px;line-height:1.7;">
+          ${safeText(message)}<br>
+          <button onclick="selectRoom('${rId}','${encodeURIComponent(pName)}','${pPhoto || ''}','${pId || ''}')" style="margin-top:14px;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--paper);cursor:pointer;">다시 불러오기</button>
+        </div>`;
+      }
+      return;
+    }
+
+    if (body) {
+      body.innerHTML = msgs.length
+        ? msgs.map(m => safeRenderMsg(m)).join('')
+        : '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:13px;">아직 대화가 없습니다. 먼저 인사를 건네보세요 ✦</div>';
+      requestAnimationFrame(()=>{ body.scrollTop = body.scrollHeight; });
+    }
+
+    checkProposal(rId);
+  } catch(e) {
+    console.error('메시지 로드 실패:', e);
+    if (body) {
+      body.innerHTML = `<div style="text-align:center;padding:40px;font-size:13px;line-height:1.7;">
+        <div style="color:#C0392B;margin-bottom:6px;">📡 메시지를 불러오지 못했습니다</div>
+        <div style="color:var(--text-muted);font-size:12px;margin-bottom:14px;">인터넷 연결을 확인하고 다시 시도해주세요</div>
+        <button onclick="selectRoom('${rId}','${encodeURIComponent(pName)}','${pPhoto || ''}','${pId || ''}')" style="padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:12px;">다시 불러오기</button>
+      </div>`;
+    }
+  }
+
+  connectWS(rId);
+
+  // 다른 채팅방 선택 시 진행 중인 케미 게임 종료
+  const cgOv = document.getElementById('cgOverlay');
+  if (cgOv && cgOv.style.display !== 'none') {
+    cgClearAll();
+    if (activeRoomId && ['waiting','intro','answering','result'].includes(cg.phase)) {
+      fetch(`${BASE}/api/chat/${activeRoomId}/chemi/cancel`, { method:'POST', headers:H }).catch(() => {});
+    }
+    cgOv.style.display = 'none';
+    cg = { topic:CG_TOPICS[0], round:1, score:0, wrongCount:0, phase:'idle', myAnswered:false, isInviter:false, inviteRoomId:null, timer:null, invTimer:null };
+  }
+
+  // 채팅방 진입 시 알림 읽음 처리 (배지 제거)
+  fetch(`${BASE}/api/room/notifications/read`, { method: 'PATCH', headers: H }).catch(() => {});
+  // GlobalWS 알림 센터 갱신
+  if (typeof NotifCenter !== 'undefined') NotifCenter.load();
+}
+
+
+function safeParseMeta(meta) {
+  if (!meta) return {};
+  if (typeof meta === 'object') return meta;
+  if (typeof meta !== 'string') return {};
+
+  try {
+    return JSON.parse(meta);
+  } catch {
+    return {};
+  }
+}
+
+function safeText(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function safeRenderMsg(m) {
+  try {
+    return renderMsg(m);
+  } catch (err) {
+    console.warn('메시지 렌더 오류:', err, m);
+    const time = m?.created_at ? new Date(m.created_at).toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'}) : '';
+    const content = safeText(m?.content || '표시할 수 없는 메시지입니다.');
+    return `<div class="ch-msg ${m?.sender_id === me?.id ? 'me' : ''}">
+      <div>
+        <div class="ch-bubble">${content}</div>
+        <div class="ch-msg-time">${time}</div>
+      </div>
+    </div>`;
+  }
+}
+
+
+// ── 메시지 렌더 (읽음/읽지않음 포함) ──────
+function renderMsg(m) {
+  const isMe  = m.sender_id === me?.id;
+  const time  = m.created_at ? new Date(m.created_at).toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'}) : '';
+  const mtype = m.msg_type || m.type || 'text';
+  // 읽음 표시 (내 메시지만)
+  // 읽음 표시: 내 메시지에만, 상대가 읽었는지 여부
+  const readMark = isMe
+    ? `<div class="msg-read-status" data-id="${m.id||''}" style="font-size:10px;color:${m.is_read?'#27AE60':'rgba(0,0,0,0.25)'};margin-bottom:2px;text-align:right;font-family:var(--font-mono);letter-spacing:.06em;">${m.is_read ? '✓ 읽음' : '읽지않음'}</div>`
+    : '';
+  if (mtype === 'system') {
+    return `<div style="text-align:center;padding:8px 20px;margin:8px 0;">
+      <span style="background:rgba(0,0,0,.06);border-radius:12px;padding:5px 14px;font-size:12px;color:var(--text-muted);">${m.content}</span>
+    </div>`;
+  }
+  if (mtype === 'photo') {
+    const rawSrc = m.content || '';
+    const src = rawSrc.startsWith('http') ? rawSrc : BASE + rawSrc;
+    return `<div class="ch-msg ${isMe?'me':''}" data-msg-id="${m.id||''}">
+      ${!isMe?'<div class="ch-msg-pic"></div>':''}
+      <div>
+        ${readMark}
+        <img src="${src}" style="max-width:200px;border-radius:8px;display:block;cursor:pointer;" onclick="window.open('${src}','_blank')" alt="사진">
+        <div class="ch-msg-time">${time}</div>
+      </div>
+    </div>`;
+  }
+  if (mtype === 'meet_propose') {
+    const meta = safeParseMeta(m.meta);
+    return `<div style="display:flex;justify-content:${isMe?'flex-end':'flex-start'};margin:12px 0;padding:0 16px;">
+      <div>
+        ${isMe ? readMark : ''}
+        <div style="max-width:280px;background:${isMe?'var(--bordeaux)':'var(--paper)'};border:1px solid var(--line);border-radius:12px;padding:16px;color:${isMe?'var(--ivory)':'var(--text)'};">
+          <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;opacity:.7;">📅 만남 제안</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px;">${meta.place||''}</div>
+          <div style="font-size:13px;opacity:.8;">${meta.date_time?new Date(meta.date_time).toLocaleDateString('ko',{month:'long',day:'numeric',weekday:'short'}):''}</div>
+          ${meta.note?`<div style="font-size:12px;margin-top:8px;opacity:.7;">${meta.note}</div>`:''}
+          <div style="font-size:11px;opacity:.5;margin-top:8px;">${time}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<div class="ch-msg ${isMe?'me':''}" data-msg-id="${m.id||''}">
+    ${!isMe?'<div class="ch-msg-pic"></div>':''}
+    <div>
+      ${readMark}
+      <div class="ch-msg-bub">${m.content||''}</div>
+      <div class="ch-msg-time">${time}</div>
+    </div>
+  </div>`;
+}
+
+// ── WebSocket ──────────────────────────────
+function connectWS(rId) {
+  if (ws) { ws._closing=true; try{ws.close();}catch{} ws=null; }
+  const url = BASE.replace(/^http/,'ws')+'/ws';
+  ws = new WebSocket(url);
+  const _ws = ws; // 이 인스턴스를 클로저에 고정 (ws 변수 재할당 후에도 구별 가능)
+  _ws.onmessage = e => {
+    if (ws !== _ws) return; // 이미 새 연결로 교체됐으면 무시
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'chemi_event' && msg.data) {
+        handleChemiWSEvent(msg.data);
+        return;
+      }
+      if (msg.type==='authed'&&msg.ok) {
+        _ws.send(JSON.stringify({type:'join',roomId:rId}));
+        syncChemiGameState(rId);
+        return;
+      }
+      if (msg.type === 'joined') {
+        // 방 진입 완료 시 DB 기준으로 읽음 상태 즉시 동기화
+        updateReadStatus();
+        return;
+      }
+      if (msg.type === 'notification') {
+        const ev = msg.event || msg.data?.event;
+        // 상대방이 매칭 종료 → 입력창 비활성화 + 종료 안내 표시
+        if (ev === 'match_cancelled') {
+          const endBar = document.getElementById('chEndedBar');
+          if (endBar) endBar.style.display = 'block';
+          const input = document.getElementById('chInput');
+          const sendBtn = document.getElementById('chSendBtn');
+          if (input)   { input.disabled = true; input.placeholder = '매칭이 종료되었습니다.'; }
+          if (sendBtn) sendBtn.disabled = true;
+          setTimeout(loadRooms, 1000);
+        }
+        if (ev === 'blocked_by') {
+          showBlockedByBanner();
+        }
+        if (ev === 'unblocked_by') {
+          // 상대방이 차단 해제 → 배너 제거 + 입력 복원
+          document.getElementById('chBlockedByBar')?.remove();
+          const inp = document.getElementById('chInput');
+          const btn = document.getElementById('chSendBtn');
+          if (inp) { inp.disabled = false; inp.placeholder = '진심을 담은 한 줄을 적어보세요...'; }
+          if (btn) btn.disabled = false;
+        }
+        return;
+      }
+      if (msg.type === 'read') {
+        // 현재 열린 방에 대한 읽음 이벤트만 처리
+        if (msg.room_id && msg.room_id !== activeRoomId) return;
+        document.querySelectorAll('.msg-read-status').forEach(el => {
+          el.textContent = '✓ 읽음';
+          el.style.color = '#27AE60';
+        });
+        return;
+      }
+      if (msg.type === 'typing') {
+        const bar = document.getElementById('chTypingBar');
+        const nameEl = document.getElementById('chTypingName');
+        if (nameEl) nameEl.textContent = partnerInfo?.partner_name || '상대방';
+        if (bar) bar.style.display = msg.isTyping ? 'flex' : 'none';
+        return;
+      }
+
+      if (msg.type==='message'&&msg.data) {
+        const d = msg.data;
+        if (d.id && document.querySelector(`[data-msg-id="${d.id}"]`)) return;
+        // 현재 열린 방 메시지만 렌더
+        if (d.room_id && d.room_id !== activeRoomId) {
+          // 다른 방 메시지 → 목록 뱃지 업데이트
+          const item = document.querySelector(`[data-room="${d.room_id}"]`);
+          if (item) {
+            let badge = item.querySelector('.ch-item-badge');
+            if (!badge) { badge=document.createElement('span'); badge.className='ch-item-badge'; item.querySelector('.ch-item-meta')?.appendChild(badge); }
+            badge.textContent = (parseInt(badge.textContent||0)+1);
+          }
+          return;
+        }
+        // 상대 메시지 수신 시 타이핑 인디케이터 즉시 숨김
+        const bar = document.getElementById('chTypingBar');
+        if (bar) bar.style.display = 'none';
+        const body = document.getElementById('chBody');
+        if (body) { body.insertAdjacentHTML('beforeend',renderMsg(d)); body.scrollTop=body.scrollHeight; }
+        // 만남 제안 수신 시 팝업
+        if (d.msg_type==='meet_propose'&&d.sender_id!==me?.id) checkProposal(activeRoomId);
+        // 내 메시지 읽음 상태 갱신 (상대가 읽으면 서버에서 is_read=true)
+        updateReadStatus();
+      }
+    } catch {}
+  };
+  let _connBarTimer = null;
+  _ws.onopen = () => {
+    clearTimeout(_connBarTimer);
+    const bar = document.getElementById('chConnBar');
+    if (bar) bar.style.display = 'none';
+    _ws.send(JSON.stringify({type:'auth',token:_token}));
+  };
+  _ws.onerror = () => {
+    // onerror 단독으로는 바 표시 안 함 — onclose가 항상 뒤따름
+  };
+  _ws.onclose = () => {
+    // 구 WS가 정상 종료됐거나 이미 새 WS로 교체된 경우 무시
+    if (_ws._closing || ws !== _ws) return;
+    // 1.5초 후에도 재연결 안 됐을 때만 바 표시
+    _connBarTimer = setTimeout(() => {
+      if (ws !== _ws) return; // 이미 교체됐으면 취소
+      const bar = document.getElementById('chConnBar');
+      if (bar) bar.style.display = 'block';
+    }, 1500);
+    setTimeout(() => { if (ws === _ws) connectWS(activeRoomId); }, 3000);
+  };
+}
+
+// ── 읽음 상태 갱신 ────────────────────────
+async function updateReadStatus() {
+  if (!activeRoomId) return;
+
+  try {
+    const r = await fetch(`${BASE}/api/chat/${activeRoomId}/messages?limit=50`, { headers: H });
+    if (!r.ok) return;
+
+    const msgs = await r.json();
+    if (!Array.isArray(msgs)) return;
+
+    msgs
+      .filter(m => m.sender_id === me?.id)
+      .forEach(m => {
+        const el = document.querySelector(`.msg-read-status[data-id="${m.id}"]`);
+        if (!el) return;
+
+        el.textContent = m.is_read ? '✓ 읽음' : '읽지않음';
+        el.style.color = m.is_read ? '#27AE60' : 'rgba(0,0,0,0.25)';
+      });
+  } catch (err) {
+    console.warn('읽음 상태 갱신 실패:', err.message);
+  }
+}
+
+// ── 메시지 전송 ────────────────────────────
+function sendMsg() {
+  const input = document.getElementById('chInput');
+  if (!input||!input.value.trim()||!activeRoomId) return;
+  if (!ws||ws.readyState!==WebSocket.OPEN) { alert('채팅 연결이 끊어졌습니다. 잠시 후 다시 시도해주세요.'); return; }
+  clearTimeout(_typingTimer);
+  if (ws && ws.readyState === WebSocket.OPEN)
+    ws.send(JSON.stringify({type:'typing', roomId:activeRoomId, isTyping:false}));
+  ws.send(JSON.stringify({type:'message',content:input.value.trim(),roomId:activeRoomId}));
+  input.value=''; input.style.height='auto';
+}
+
+const chInput = document.getElementById('chInput');
+let _typingTimer = null;
+let _lastTypingSent = 0;
+if (chInput) {
+  chInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}});
+  chInput.addEventListener('input',()=>{
+    chInput.style.height='auto';
+    chInput.style.height=Math.min(chInput.scrollHeight,120)+'px';
+    if (ws && ws.readyState === WebSocket.OPEN && activeRoomId) {
+      const now = Date.now();
+      if (now - _lastTypingSent > 1000) {
+        _lastTypingSent = now;
+        ws.send(JSON.stringify({type:'typing', roomId:activeRoomId, isTyping:true}));
+      }
+      clearTimeout(_typingTimer);
+      _typingTimer = setTimeout(() => {
+        if (ws && ws.readyState === WebSocket.OPEN && activeRoomId)
+          ws.send(JSON.stringify({type:'typing', roomId:activeRoomId, isTyping:false}));
+      }, 2500);
+    }
+  });
+}
+
+// ── 만남 제안 확인 ─────────────────────────
+async function checkProposal(rId) {
+  try {
+    const r = await fetch(`${BASE}/api/room/${rId}/propose`,{headers:H});
+    if (!r.ok) return;
+    const prop = await r.json();
+    if (!prop||prop.status!=='pending') return;
+    if (prop.proposer_id!==me?.id) showProposalPopup(prop);
+  } catch {}
+}
+
+function showProposalPopup(prop) {
+  document.getElementById('proposalPopup')?.remove();
+  const dt = new Date(prop.date_time);
+  const pop = document.createElement('div');
+  pop.id='proposalPopup';
+  pop.style.cssText='position:fixed;inset:0;z-index:2000;background:rgba(26,7,8,.85);backdrop-filter:var(--modal-blur,blur(12px));display:flex;align-items:center;justify-content:center;padding:20px;';
+  pop.innerHTML=`<div style="background:var(--paper);border-radius:var(--r-md);padding:40px 36px;max-width:400px;width:100%;text-align:center;">
+    <div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--champagne-deep);margin-bottom:16px;">만남 제안 도착 ✦</div>
+    <h2 style="font-family:var(--font-display);font-size:26px;font-weight:300;margin-bottom:24px;">${partnerInfo?.partner_name||'상대방'}님이<br>만남을 제안했습니다</h2>
+    <div style="background:var(--cream);border-radius:var(--r-sm);padding:20px;margin-bottom:24px;text-align:left;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:10px;align-items:center;"><span style="font-size:20px;">📅</span><span style="font-size:15px;font-weight:500;">${dt.toLocaleDateString('ko',{month:'long',day:'numeric',weekday:'short'})} ${dt.toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'})}</span></div>
+        <div style="display:flex;gap:10px;align-items:center;"><span style="font-size:20px;">📍</span><span style="font-size:15px;font-weight:500;">${prop.place||'장소 미정'}</span></div>
+        ${prop.note?`<div style="display:flex;gap:10px;"><span style="font-size:20px;">💬</span><span style="font-size:13px;color:var(--text-muted);line-height:1.6;">${prop.note}</span></div>`:''}
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button onclick="respondProposal('${prop.id}','reject')" style="flex:1;padding:14px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-family:var(--font-body);font-size:14px;">아니요</button>
+      <button onclick="respondProposal('${prop.id}','accept')" style="flex:1;padding:14px;border-radius:999px;background:var(--bordeaux);color:var(--ivory);border:none;cursor:pointer;font-family:var(--font-body);font-size:14px;font-weight:500;">네, 좋아요 ✓</button>
+    </div>
+  </div>`;
+  document.body.appendChild(pop);
+}
+
+async function respondProposal(propId, action) {
+  document.getElementById('proposalPopup')?.remove();
+  try {
+    const r = await fetch(`${BASE}/api/room/${activeRoomId}/propose/${propId}/${action}`,{method:'PATCH',headers:H});
+    const d = await r.json();
+    if (action==='accept') alert('✅ 만남을 수락했습니다! 즐거운 시간 되세요 ✦');
+    else if (d.closed) alert('만남 제안이 3회 거절되어 소개팅이 종료됐습니다.');
+    else alert(`거절했습니다. (${d.reject_count}/3회)`);
+    const r2 = await fetch(`${BASE}/api/chat/${activeRoomId}/messages?limit=50`,{headers:H});
+    const msgs = r2.ok ? await r2.json() : [];
+    const body = document.getElementById('chBody');
+    if (body) { body.innerHTML=msgs.map(m=>safeRenderMsg(m)).join(''); body.scrollTop=body.scrollHeight; }
+  } catch { alert('오류가 발생했습니다.'); }
+}
+
+// ── 만남 제안 입력 폼 ─────────────────────
+function proposeMeeting() {
+  if (!activeRoomId) { alert('채팅방을 먼저 선택해주세요.'); return; }
+  // 팝업 대신 room.html 페이지로 이동
+  window.location.href = `room.html?room=${activeRoomId}`;
+}
+
+async function submitProposal(btn) {
+  const date=document.getElementById('propDate').value;
+  const time=document.getElementById('propTime').value;
+  const place=document.getElementById('propPlace').value.trim();
+  const note=document.getElementById('propNote').value.trim();
+  if (!date){alert('날짜를 선택해주세요.');return;}
+  if (!place){alert('장소를 입력해주세요.');return;}
+  btn.disabled=true; btn.textContent='전송 중…';
+  try {
+    const r=await fetch(`${BASE}/api/room/${activeRoomId}/propose`,{
+      method:'POST',headers:{...H,'Content-Type':'application/json'},
+      body:JSON.stringify({date_time:date+'T'+time,place,note})
+    });
+    const d=await r.json();
+    if (!r.ok){alert(d.error||'전송 실패');btn.disabled=false;btn.textContent='제안 보내기';return;}
+    btn.closest('[style*=fixed]').remove();
+    const r2=await fetch(`${BASE}/api/chat/${activeRoomId}/messages?limit=50`,{headers:H});
+    const msgs=r2.ok?await r2.json():[];
+    const body=document.getElementById('chBody');
+    if(body){body.innerHTML=msgs.map(m=>safeRenderMsg(m)).join('');body.scrollTop=body.scrollHeight;}
+    alert('✅ 만남 제안을 보냈습니다!\n상대방이 수락하면 알림을 드립니다.');
+  } catch {alert('오류');btn.disabled=false;btn.textContent='제안 보내기';}
+}
+
+// ── 더보기 메뉴 ───────────────────────────
+function showRoomMenu() {
+  document.getElementById('roomMenu')?.remove();
+  if (!activeRoomId) return;
+  const menu=document.createElement('div');
+  menu.id='roomMenu';
+  menu.style.cssText='position:fixed;bottom:120px;right:24px;z-index:1500;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:0 8px 32px rgba(0,0,0,.15);overflow:hidden;min-width:160px;';
+  const blockLabel = _isPartnerBlocked ? '🔓 차단 해제하기' : '🚫 차단하기';
+  const blockFn    = _isPartnerBlocked ? unblockUser : blockUser;
+  [['🚩 신고 · 매니저 호출',callManager,false],[blockLabel,blockFn,false],['💔 매칭 종료',endMatch,true]].forEach(([lbl,fn,danger])=>{
+    const b=document.createElement('button');
+    b.style.cssText=`display:block;width:100%;padding:14px 20px;background:transparent;border:none;text-align:left;font-size:13px;cursor:pointer;color:${danger?'#C0392B':'var(--text)'};border-bottom:1px solid rgba(229,224,222,.5);font-family:var(--font-body);`;
+    b.textContent=lbl;
+    b.onmouseover=()=>b.style.background='var(--cream)';
+    b.onmouseout=()=>b.style.background='transparent';
+    b.onclick=()=>{menu.remove();fn();};
+    menu.appendChild(b);
+  });
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',()=>menu?.remove(),{once:true}),50);
+}
+
+function showBlockedByBanner() {
+  document.getElementById('chBlockedByBar')?.remove();
+  const pane = document.querySelector('.ch-pane');
+  if (!pane) return;
+  const bar = document.createElement('div');
+  bar.id = 'chBlockedByBar';
+  bar.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:10px 16px;background:#FCE4EC;border-top:1px solid #E57373;font-size:12px;color:#C62828;flex-shrink:0;text-align:center;';
+  bar.textContent = '🚫 상대방이 회원님을 차단하였습니다. 메시지를 보낼 수 없습니다.';
+  const comp = document.querySelector('.ch-comp');
+  if (comp) pane.insertBefore(bar, comp);
+  const inp = document.getElementById('chInput');
+  const btn = document.getElementById('chSendBtn');
+  if (inp) { inp.disabled = true; inp.placeholder = '차단되어 메시지를 보낼 수 없습니다.'; }
+  if (btn) btn.disabled = true;
+}
+
+async function reportUser() {
+  if (!partnerInfo?.partner_id) return alert('상대 회원 정보를 찾을 수 없습니다.');
+
+  const reason = prompt('신고 사유를 입력해주세요:');
+  if (!reason?.trim()) return;
+
+  try {
+    const r = await fetch(`${BASE}/api/safety/report/${partnerInfo.partner_id}`, {
+      method: 'POST',
+      headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reason: reason.trim(),
+        room_id: activeRoomId
+      })
+    });
+
+    const d = await r.json().catch(() => ({}));
+    alert(r.ok ? (d.message || '신고가 접수됐습니다.') : (d.error || '신고 실패'));
+  } catch (err) {
+    console.error(err);
+    alert('신고 처리 중 오류가 발생했습니다.');
+  }
+}
+
+async function blockUser() {
+  if (!partnerInfo?.partner_id) return alert('상대 회원 정보를 찾을 수 없습니다.');
+  if (!confirm(`${partnerInfo?.partner_name || '상대방'}님을 차단하시겠습니까?\n\n차단하면 상대방의 메시지를 받지 않습니다.\n채팅방 메뉴에서 차단 해제가 가능합니다.`)) return;
+
+  try {
+    const r = await fetch(`${BASE}/api/safety/block/${partnerInfo.partner_id}`, {
+      method: 'POST',
+      headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: '채팅방에서 상대방을 차단했습니다.' })
+    });
+
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { alert(d.error || '차단 실패'); return; }
+
+    _isPartnerBlocked = true;
+    const blockBar = document.getElementById('chBlockBar');
+    if (blockBar) blockBar.style.display = 'flex';
+    // 차단 후 입력 비활성화
+    const inp = document.getElementById('chInput');
+    const btn = document.getElementById('chSendBtn');
+    if (inp) { inp.disabled = true; inp.placeholder = '차단 중에는 메시지를 보낼 수 없습니다.'; }
+    if (btn) btn.disabled = true;
+  } catch (err) {
+    alert('차단 처리 중 오류가 발생했습니다.');
+  }
+}
+
+async function unblockUser() {
+  if (!partnerInfo?.partner_id) return alert('상대 회원 정보를 찾을 수 없습니다.');
+  if (!confirm(`${partnerInfo?.partner_name || '상대방'}님 차단을 해제하시겠습니까?`)) return;
+
+  try {
+    const r = await fetch(`${BASE}/api/safety/block/${partnerInfo.partner_id}`, {
+      method: 'DELETE', headers: H
+    });
+    if (!r.ok) { alert('차단 해제 실패'); return; }
+
+    _isPartnerBlocked = false;
+    const blockBar = document.getElementById('chBlockBar');
+    if (blockBar) blockBar.style.display = 'none';
+    // 차단 해제 후 입력 복원
+    const inp = document.getElementById('chInput');
+    const btn = document.getElementById('chSendBtn');
+    if (inp) { inp.disabled = false; inp.placeholder = '진심을 담은 한 줄을 적어보세요...'; }
+    if (btn) btn.disabled = false;
+  } catch (err) {
+    alert('차단 해제 중 오류가 발생했습니다.');
+  }
+}
+
+async function callManager() {
+  if (!activeRoomId) return alert('채팅방 정보를 찾을 수 없습니다.');
+
+  const reason = prompt(
+    '신고 또는 매니저 호출 사유를 입력해주세요.\n(불쾌한 언행, 노쇼, 분쟁 등 자유롭게 작성하세요)',
+    ''
+  );
+  if (reason === null) return; // 취소
+  if (!reason.trim()) return alert('사유를 입력해주세요.');
+
+  try {
+    const r = await fetch(`${BASE}/api/room/${activeRoomId}/call-manager`, {
+      method: 'POST',
+      headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: reason.trim() })
+    });
+
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return alert(d.error || '접수 실패');
+    alert('신고/매니저 호출이 접수됐습니다.\n관리자가 채팅 내역을 검토합니다.');
+  } catch (err) {
+    console.error(err);
+    alert('오류가 발생했습니다.');
+  }
+}
+
+async function endMatch() {
+  if (!activeRoomId) return alert('채팅방 정보를 찾을 수 없습니다.');
+
+  const reason = prompt('매칭을 종료하는 이유를 적어주세요:', '사용자 요청으로 매칭 종료');
+  if (reason === null) return;
+
+  try {
+    const r = await fetch(`${BASE}/api/room/${activeRoomId}/cancel`, {
+      method: 'DELETE',
+      headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reason: reason.trim() || '사용자 요청으로 매칭 종료'
+      })
+    });
+
+    const d = await r.json().catch(() => ({}));
+
+    if (!r.ok) {
+      alert(d.error || '매칭 종료 실패');
+      return;
+    }
+
+    alert(d.message || '매칭이 종료됐습니다.');
+    location.href = 'match.html';
+  } catch (err) {
+    console.error(err);
+    alert('매칭 종료 중 오류가 발생했습니다.');
+  }
+}
+
+// 채팅창에 캐미 이벤트 로그 출력
+function logChemiToChat(text, isResult=false) {
+  const body = document.getElementById('chBody');
+  if (!body) return;
+  body.insertAdjacentHTML('beforeend', `
+    <div style="text-align:center;padding:8px 20px;margin:8px 0;">
+      <span style="display:inline-block;background:${isResult?'rgba(212,182,121,.15)':'rgba(0,0,0,.05)'};border:${isResult?'1px solid rgba(212,182,121,.3)':'none'};border-radius:12px;padding:6px 16px;font-size:12px;color:${isResult?'var(--champagne-deep)':'var(--text-muted)'};">${text}</span>
+    </div>`);
+  body.scrollTop = body.scrollHeight;
+}
+
+function showList() {
+  if (window.innerWidth <= 640) {
+    const shell = document.querySelector('.ch-shell');
+    if (shell) shell.classList.remove('room-open');
+  }
+  activeRoomId = null;
+}
+
+function openPartnerProfile() {
+  const pid = partnerInfo?.partner_id;
+
+  if (!pid) {
+    alert('상대 프로필 정보를 찾을 수 없습니다.');
+    return;
+  }
+
+  window.location.href = `profile.html?user=${encodeURIComponent(pid)}&from=chat&room=${encodeURIComponent(activeRoomId || '')}`;
+}
+
+// ── 사진 전송 ─────────────────────────────
+function sendPhotoMsg() {
+  if (!activeRoomId) { alert('채팅방을 먼저 선택해주세요.'); return; }
+
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  // iOS Safari는 DOM에 없는 input의 change 이벤트를 첫 번째 시도에서 잃어버림
+  // → body에 숨겨서 추가한 뒤 클릭, 이벤트 후 제거
+  inp.style.cssText = 'position:fixed;top:-200px;left:-200px;opacity:0;pointer-events:none;';
+  document.body.appendChild(inp);
+
+  inp.onchange = async () => {
+    document.body.removeChild(inp);
+    const file = inp.files[0];
+    if (!file) return;
+
+    const form = new FormData();
+    form.append('photo', file);
+
+    try {
+      const r = await fetch(`${BASE}/api/chat/${activeRoomId}/photo`, {
+        method: 'POST',
+        headers: H,
+        body: form
+      });
+
+      const d = await r.json().catch(() => ({}));
+
+      if (!r.ok) {
+        alert(d.error || '사진 전송 실패');
+        return;
+      }
+
+      // WS로 이미 표시된 경우엔 중복 방지
+      setTimeout(() => {
+        const msgId = d.message?.id || '';
+        if (msgId && document.querySelector(`[data-msg-id="${msgId}"]`)) return;
+        const body = document.getElementById('chBody');
+        if (body && d.message) {
+          body.insertAdjacentHTML('beforeend', safeRenderMsg(d.message));
+          body.scrollTop = body.scrollHeight;
+        }
+      }, 300);
+    } catch (e) {
+      console.error('사진 전송 실패:', e);
+      alert('사진 전송 실패');
+    }
+  };
+
+  inp.click();
+}
+
+// 사진 첨부 버튼 연결
+const attachBtn=document.querySelector('.ch-attach');
+if (attachBtn) attachBtn.onclick=sendPhotoMsg;
+
+// ── 알림 유지 정책 ─────────────────────
+// 새로고침/채팅 페이지 진입만으로 알림은 사라지지 않습니다.
+// 채팅 숫자는 실제 메시지를 읽었을 때만 messages.is_read 기준으로 줄어듭니다.
+
+
+// ── 매칭 수락 팝업 알림 ─────────────────────
+function showMatchAcceptedPopup(notif) {
+  if (!notif) return;
+
+  const seenKey = `match_accept_popup_seen_${notif.id}`;
+  if (localStorage.getItem(seenKey)) return;
+  localStorage.setItem(seenKey, '1');
+
+  const link = notif.link || '/pages/chat.html';
+  const pop = document.createElement('div');
+  pop.style.cssText = 'position:fixed;inset:0;z-index:4000;background:rgba(26,7,8,.82);backdrop-filter:var(--modal-blur,blur(12px));display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  pop.innerHTML = `
+    <div style="background:var(--paper,#fff);border-radius:18px;padding:42px 34px;max-width:380px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.22);">
+      <div style="font-size:50px;margin-bottom:18px;">🎉</div>
+      <div style="font-family:var(--font-mono,monospace);font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--champagne-deep,#B8975C);margin-bottom:14px;">MATCH ACCEPTED</div>
+      <h2 style="font-family:var(--font-display,serif);font-size:26px;font-weight:300;line-height:1.35;margin:0 0 14px;color:var(--ink,#1A0708);">소개팅 신청이<br>수락되었습니다</h2>
+      <p style="font-size:14px;color:var(--text-muted,#777);line-height:1.8;margin:0 0 28px;">이제 채팅방에서 상대방과 대화를 시작할 수 있습니다.</p>
+      <div style="display:flex;gap:10px;">
+        <button id="matchAcceptLaterBtn" style="flex:1;padding:14px;border-radius:999px;border:1px solid var(--line,#ddd);background:transparent;color:var(--text,#222);cursor:pointer;font-size:14px;">나중에</button>
+        <button id="matchAcceptGoBtn" style="flex:1;padding:14px;border-radius:999px;border:none;background:var(--bordeaux,#3A0E14);color:var(--ivory,#fff);cursor:pointer;font-size:14px;font-weight:600;">채팅하기</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(pop);
+
+  const markRead = () => {
+    fetch(`${BASE}/api/room/notifications/${notif.id}/read`, {
+      method: 'PATCH',
+      headers: H
+    }).catch(() => {});
+  };
+
+  pop.querySelector('#matchAcceptLaterBtn')?.addEventListener('click', () => {
+    markRead();
+    pop.remove();
+  });
+
+  pop.querySelector('#matchAcceptGoBtn')?.addEventListener('click', () => {
+    markRead();
+    window.location.href = link.startsWith('http') ? link : `${BASE}${link}`;
+  });
+}
+
+async function checkMatchAcceptedPopup() {
+  try {
+    const r = await fetch(`${BASE}/api/room/notifications/list`, { headers: H });
+    if (!r.ok) return;
+
+    const list = await r.json();
+    if (!Array.isArray(list)) return;
+
+    const notif = list.find(n => !n.is_read && n.type === 'match_accept');
+    if (notif) showMatchAcceptedPopup(notif);
+  } catch (err) {
+    console.warn('매칭 수락 알림 확인 실패:', err.message);
+  }
+}
+
+function logout() {
+  localStorage.removeItem('ss_token');
+  localStorage.removeItem('ss_user');
+  window.location.href=window.location.origin;
+}
+
+
+// ═══════════════════════════════════════════
+// 케미라인 게임 (완전 재작성)
+// ═══════════════════════════════════════════
+const CG_TOPICS = ['동물', '연예인', '아이돌', '계절', '예능프로', '만화'];
+
+// 서버-클라이언트 시계 오차 (ms). 서버 이벤트 수신 시마다 보정.
+// 두 클라이언트 모두 같은 serverNow를 기준으로 보정하므로 카운트다운이 동기화됨.
+let cgClockOffset = 0;
+
+let cg = {
+  topic: CG_TOPICS[0],
+  round: 1, score: 0, wrongCount: 0,
+  phase: 'idle',       // idle|selecting|waiting|invited|intro|answering|result|ended
+  myAnswered: false,
+  isInviter: false,
+  inviteRoomId: null,  // 초대 수신 시 저장 — accept 에서 activeRoomId 대신 사용
+  timer: null,
+  invTimer: null
+};
+
+// ── 헬퍼 ──────────────────────────────────
+function cgClearTimer()    { if (cg.timer)    { clearInterval(cg.timer);    cg.timer = null; } }
+function cgClearInvTimer() { if (cg.invTimer) { clearTimeout(cg.invTimer);  cg.invTimer = null; } }
+function cgClearAll()      { cgClearTimer(); cgClearInvTimer(); }
+
+function cgPanel(id) {
+  ['cg-select','cg-waiting','cg-invite','cg-game','cg-end'].forEach(p => {
+    const el = document.getElementById(p); if (el) el.style.display = p === id ? 'block' : 'none';
+  });
+}
+
+function cgOpen(panelId) {
+  const ov = document.getElementById('cgOverlay');
+  if (ov) ov.style.display = 'flex';
+  cgPanel(panelId);
+}
+
+function cgClose() {
+  const ov = document.getElementById('cgOverlay');
+  if (ov) ov.style.display = 'none';
+  cgClearAll();
+  cg = { topic: CG_TOPICS[0], round:1, score:0, wrongCount:0, phase:'idle', myAnswered:false, isInviter:false, inviteRoomId:null, timer:null, invTimer:null };
+}
+
+// ── 주제 선택 UI ───────────────────────────
+function cgRenderTopics() {
+  const wrap = document.getElementById('cg-topicGrid');
+  if (!wrap) return;
+  wrap.innerHTML = CG_TOPICS.map(t =>
+    `<button type="button" class="cg-topic${t===cg.topic?' on':''}" onclick="cgPickTopic('${t}')">${t}</button>`
+  ).join('');
+}
+
+function cgPickTopic(t) {
+  cg.topic = t;
+  document.querySelectorAll('.cg-topic').forEach(b => b.classList.toggle('on', b.textContent === t));
+}
+
+// ── 게임 버튼 클릭 (신청자) ────────────────
+function startChemiGame() {
+  if (!activeRoomId) { alert('채팅방을 먼저 선택해주세요.'); return; }
+  if (!ws || ws.readyState !== WebSocket.OPEN) { alert('채팅 연결이 끊어졌습니다. 잠시 후 다시 시도해주세요.'); return; }
+  cg.isInviter = true;
+  cg.phase = 'selecting';
+  cgRenderTopics();
+  const btn = document.getElementById('cg-startBtn');
+  if (btn) { btn.disabled = false; btn.textContent = '게임 시작 ✦'; }
+  cgOpen('cg-select');
+}
+
+// ── 초대 전송 ─────────────────────────────
+async function sendChemiInvite() {
+  const btn = document.getElementById('cg-startBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '전송 중...'; }
+  try {
+    const r = await fetch(`${BASE}/api/chat/${activeRoomId}/chemi/start`, {
+      method: 'POST', headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: cg.topic })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      alert(d.error || '게임 신청 실패');
+      if (btn) { btn.disabled = false; btn.textContent = '게임 시작 ✦'; }
+      return;
+    }
+    cg.phase = 'waiting';
+    const msg = document.getElementById('cg-waitMsg');
+    if (msg) msg.textContent = `상대방의 수락을 기다리는 중... (첫 주제: ${cg.topic})`;
+    cgOpen('cg-waiting');
+    // 60초 자동 취소
+    cg.invTimer = setTimeout(async () => {
+      if (cg.phase === 'waiting') {
+        await fetch(`${BASE}/api/chat/${activeRoomId}/chemi/cancel`, { method:'POST', headers:H }).catch(()=>{});
+        cgClose();
+        alert('상대방이 응답하지 않아 초대가 취소됐습니다.');
+      }
+    }, 60000);
+  } catch (e) { alert('오류: ' + e.message); cgClose(); }
+}
+
+// ── 초대 취소 (신청자) ────────────────────
+async function cgCancelInvite() {
+  cgClearAll();
+  await fetch(`${BASE}/api/chat/${activeRoomId}/chemi/cancel`, { method:'POST', headers:H }).catch(()=>{});
+  cgClose();
+}
+
+// ── 수락 (수락자) ─────────────────────────
+async function cgAccept() {
+  // inviteRoomId: 서버가 invite 이벤트에 포함한 roomId (activeRoomId 불일치 방지)
+  const roomId = cg.inviteRoomId || activeRoomId;
+  if (!roomId) { alert('채팅방 정보가 없습니다. 채팅방에서 다시 시도해주세요.'); cgClose(); return; }
+  try {
+    const r = await fetch(`${BASE}/api/chat/${roomId}/chemi/accept`, { method:'POST', headers:H });
+    if (!r.ok) { const d = await r.json().catch(()=>({})); alert(d.error||'수락 실패'); cgClose(); return; }
+    // game_started 이벤트가 WS로 양쪽에 브로드캐스트됨
+  } catch (e) { alert('오류: ' + e.message); cgClose(); }
+}
+
+// ── 거절 (수락자) ─────────────────────────
+async function cgReject() {
+  await fetch(`${BASE}/api/chat/${activeRoomId}/chemi/reject`, { method:'POST', headers:H }).catch(()=>{});
+  cgClose();
+}
+
+// ── 게임 나가기 (진행 중) ─────────────────
+async function cgExit() {
+  if (!confirm('게임을 종료하시겠습니까?\n상대방에게도 종료됩니다.')) return;
+  cgClearAll();
+  cg.phase = 'ended';
+  await fetch(`${BASE}/api/chat/${activeRoomId}/chemi/cancel`, {
+    method:'POST', headers:{...H,'Content-Type':'application/json'}, body:JSON.stringify({reason:'exit'})
+  }).catch(()=>{});
+  cgShowEnd(cg.score, true);
+}
+
+// ── 게임 화면 갱신 ────────────────────────
+function cgSetInfo(topic, round, score, wrongCount) {
+  const s = (id, v) => { const e=document.getElementById(id); if(e) e.textContent=String(v); };
+  s('cg-topic', topic||'—'); s('cg-round', round||1);
+  s('cg-score', score||0);   s('cg-wrong', wrongCount||0);
+  cg.topic=topic; cg.round=Number(round); cg.score=Number(score); cg.wrongCount=Number(wrongCount);
+}
+
+// ── 서버 타임스탬프 기반 카운트다운 ─────────
+// roundStartedAt: 결과 표시 끝나는 시각 (= 다음 intro 시작)
+// answerStartedAt: intro 끝나는 시각 (= 입력 시작)
+// deadlineAt: 입력 마감
+// serverNow: 서버가 이벤트를 보낸 시각(ms). 이 값으로 클라이언트 시계 오차를 보정해
+//            두 클라이언트가 동일한 숫자를 표시하도록 한다.
+function cgStartCountdown(roundStartedAt, answerStartedAt, deadlineAt, round, nextTopic, serverNow) {
+  cgClearTimer();
+  if (serverNow) cgClockOffset = Number(serverNow) - Date.now(); // 오차 갱신
+  const tR = new Date(roundStartedAt).getTime();
+  const tA = new Date(answerStartedAt).getTime();
+  const tD = new Date(deadlineAt).getTime();
+  let phase = '';
+
+  cg.timer = setInterval(() => {
+    if (Number(round) !== Number(cg.round)) { cgClearTimer(); return; }
+    // cgClockOffset 보정 → 서버 시각 기준 now
+    const now = Date.now() + cgClockOffset;
+    const cd = document.getElementById('cg-cd');
+    if (!cd) { cgClearTimer(); return; }
+
+    if (now < tR) {
+      // 결과 표시 중 — 카운트다운 대기
+      if (phase !== 'result') { phase='result'; cd.textContent='—'; }
+
+    } else if (now < tA) {
+      // 주제 확인 (3초)
+      const rem = Math.ceil((tA - now) / 1000);
+      cd.textContent = Math.max(1, rem);
+      cd.style.borderColor='#3498DB'; cd.style.color='#3498DB';
+      if (phase !== 'intro') {
+        phase='intro'; cg.phase='intro'; cg.myAnswered=false;
+        // intro 진입 시점에 비로소 다음 주제/라운드를 표시 (결과 화면 중엔 이전 주제 유지)
+        if (nextTopic) {
+          cg.topic = nextTopic;
+          const el = document.getElementById('cg-topic'); if (el) el.textContent = nextTopic;
+          const rn = document.getElementById('cg-round'); if (rn) rn.textContent = round;
+        }
+        cgOpen('cg-game');
+        document.getElementById('cg-status').textContent='주제를 확인하세요. 잠시 후 답변 시간이 시작됩니다.';
+        document.getElementById('cg-inputWrap').style.display='none';
+        document.getElementById('cg-waitAns').style.display='none';
+      }
+
+    } else if (now < tD) {
+      // 답변 시간 (10초)
+      const rem = Math.ceil((tD - now) / 1000);
+      cd.textContent = Math.max(0, rem);
+      if (rem<=3) { cd.style.borderColor='#C0392B'; cd.style.color='#C0392B'; }
+      else         { cd.style.borderColor='var(--champagne)'; cd.style.color='var(--champagne)'; }
+      if (phase !== 'answering') {
+        phase='answering'; cg.phase='answering'; cg.myAnswered=false;
+        document.getElementById('cg-status').textContent='둘 다 10초 안에 입력하세요!';
+        const inp=document.getElementById('cg-input');
+        if (inp){ inp.value=''; inp.disabled=false; }
+        document.getElementById('cg-submitBtn').disabled=false;
+        document.getElementById('cg-inputWrap').style.display='block';
+        document.getElementById('cg-waitAns').style.display='none';
+        setTimeout(()=>document.getElementById('cg-input')?.focus(),80);
+      }
+
+    } else {
+      // 시간 초과
+      cd.textContent='0'; cgClearTimer();
+      if (!cg.myAnswered && cg.phase==='answering') cgSubmit();
+    }
+  }, 200);
+}
+
+// ── 답변 제출 ─────────────────────────────
+async function cgSubmit() {
+  if (cg.myAnswered) return;
+  const inp = document.getElementById('cg-input');
+  const answer = inp ? inp.value.trim() : '';
+  cg.myAnswered = true;
+  document.getElementById('cg-inputWrap').style.display='none';
+  document.getElementById('cg-waitAns').style.display='block';
+  const myAns=document.getElementById('cg-myAns'); if(myAns) myAns.textContent=answer||'(미입력)';
+  document.getElementById('cg-status').textContent='제출 완료! 상대방 답변 대기 중...';
+  try {
+    await fetch(`${BASE}/api/chat/${activeRoomId}/chemi/answer`, {
+      method:'POST', headers:{...H,'Content-Type':'application/json'},
+      body: JSON.stringify({ answer, round: cg.round })
+    });
+  } catch(e) { console.error('chemi answer 전송 오류:', e.message); }
+}
+
+// ── 게임 종료 화면 ────────────────────────
+function cgShowEnd(finalScore, isExit=false) {
+  cgClearAll();
+  cg.phase='ended';
+  const sc = Number(finalScore||cg.score||0);
+  const s  = (id,v)=>{ const e=document.getElementById(id); if(e) e.innerHTML=String(v); };
+  s('cg-endIcon',  isExit?'👋': sc>=30?'💑': sc>0?'💕':'😢');
+  s('cg-endTitle', isExit?'게임 종료': sc>=30?'완벽한 케미!': sc>0?'좋은 케미!':'아쉬워요');
+  s('cg-endDesc',  isExit
+    ? `중도 종료됐습니다.${sc>0?`<br>최종 <b style="color:var(--champagne)">${sc}점</b>이 기록됩니다.`:''}`
+    : sc>0
+      ? `${Math.round(sc/10)}번 마음이 통했어요!<br>이달의 케미커플 랭킹에 등록됩니다.`
+      : '3번 틀려 게임이 종료됐습니다. 다시 도전해보세요!');
+  s('cg-endScore', `✦ ${sc}점`);
+  cgOpen('cg-end');
+}
+
+// ── WS 재연결 시 게임 상태 복원 ───────────
+async function syncChemiGameState(rId) {
+  try {
+    const r = await fetch(`${BASE}/api/chat/${rId}/chemi`, { headers:H });
+    const g = await r.json();
+    if (!g || g.status !== 'active') return;
+    cg.round=Number(g.round||1); cg.score=Number(g.score||0); cg.wrongCount=Number(g.wrongCount||0);
+    cgSetInfo(g.topic, g.round, g.score, g.wrongCount||0);
+    cgOpen('cg-game');
+    if (g.answerStartedAt && g.deadlineAt) {
+      cgStartCountdown(g.roundStartedAt||g.answerStartedAt, g.answerStartedAt, g.deadlineAt, g.round);
+    }
+  } catch {}
+}
+
+// ── WS 이벤트 핸들러 ──────────────────────
+function handleChemiWSEvent(ev) {
+  switch (ev.event) {
+
+    case 'invite':
+      cgClearAll();
+      cg.isInviter = false;
+      cg.phase     = 'invited';
+      cg.topic     = ev.topic || CG_TOPICS[0];
+      cg.inviteRoomId = ev.roomId || activeRoomId; // 서버가 보낸 roomId 저장
+      { const invT = document.getElementById('cg-invTopic'); if (invT) invT.textContent = ev.topic || '—'; }
+      cgOpen('cg-invite');
+      break;
+
+    case 'game_started':
+      cgClearAll();
+      cg.round=1; cg.score=0; cg.wrongCount=0;
+      // 점수/오답 표시 초기화
+      { const sc=document.getElementById('cg-score'); if(sc) sc.textContent='0'; }
+      { const wc=document.getElementById('cg-wrong'); if(wc) wc.textContent='0'; }
+      // 주제는 intro 진입 시점에 표시 (nextTopic으로 전달)
+      cgStartCountdown(ev.roundStartedAt, ev.answerStartedAt, ev.deadlineAt, 1, ev.topic, ev.serverNow);
+      break;
+
+    case 'answer_submitted':
+      if (!cg.myAnswered && cg.phase==='answering') {
+        const s=document.getElementById('cg-status'); if(s) s.textContent='상대방이 답변을 제출했습니다. 내 답변을 입력하세요!';
+      }
+      break;
+
+    case 'round_result': {
+      cgClearTimer();
+      cg.phase='result'; cg.score=Number(ev.score||0); cg.wrongCount=Number(ev.wrongCount||0);
+      // 점수·오답만 즉시 갱신 — 주제/라운드는 intro 진입 시에 바꿈 (결과 화면 중 주제 유지)
+      const sc=document.getElementById('cg-score'); if(sc) sc.textContent=ev.score||0;
+      const wc=document.getElementById('cg-wrong'); if(wc) wc.textContent=ev.wrongCount||0;
+      const cd=document.getElementById('cg-cd');
+      if(cd){ cd.textContent=ev.matched?'💕':'💔'; cd.style.borderColor=ev.matched?'#27AE60':'#C0392B'; cd.style.color=ev.matched?'#27AE60':'#C0392B'; }
+      const st=document.getElementById('cg-status');
+      if(st) st.textContent=ev.matched
+        ? `✦ 케미! +10점 (총 ${ev.score}점)`
+        : `달랐어요 — "${ev.a1answer}" vs "${ev.a2answer}" (오답 ${ev.wrongCount}/3)`;
+      document.getElementById('cg-inputWrap').style.display='none';
+      document.getElementById('cg-waitAns').style.display='none';
+      // 다음 라운드 카운트다운 — nextTopic은 intro 시점에 표시됨
+      if (ev.nextRound && ev.roundStartedAt) {
+        cg.round = ev.nextRound;
+        cgStartCountdown(ev.roundStartedAt, ev.answerStartedAt, ev.deadlineAt, ev.nextRound, ev.nextTopic, ev.serverNow);
+      }
+      break;
+    }
+
+    case 'game_end': {
+      const sc = ev.finalScore || 0;
+      cgShowEnd(sc, false);
+      const hits = Math.round(sc / 10);
+      logChemiToChat(
+        sc > 0
+          ? `✦ 케미라인 게임 완료 — ${hits}번 마음이 통했어요! 최종 ${sc}점`
+          : `✦ 케미라인 게임 종료 — 다음엔 더 잘 맞출 수 있을 거예요!`,
+        true
+      );
+      break;
+    }
+
+    case 'game_cancelled':
+      if (['intro','answering','result'].includes(cg.phase)) {
+        cgShowEnd(cg.score, true);
+      } else {
+        cgClose();
+      }
+      break;
+  }
+}
+
+window.addEventListener('beforeunload', () => {
+  try {
+    if (activeRoomId && ['intro','answering','result'].includes(cg.phase)) {
+      const url=`${BASE}/api/chat/${activeRoomId}/chemi/cancel`;
+      const blob=new Blob([JSON.stringify({reason:'unload'})],{type:'application/json'});
+      if (navigator.sendBeacon) navigator.sendBeacon(url, blob);
+    }
+  } catch {}
+});
+
+// ── GlobalWS 실시간 이벤트 ────────────────
+// GlobalWS 핸들러는 _initChat()에서 일괄 등록
+
+function showChatToast(message, isSuccess) {
+  const existing = document.getElementById('chatToast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.id = 'chatToast';
+  t.style.cssText = `position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:9000;padding:12px 24px;border-radius:var(--r-pill);background:${isSuccess?'var(--bordeaux)':'var(--ink)'};color:var(--ivory);font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.2);white-space:nowrap;`;
+  t.textContent = message;
+  document.body.appendChild(t);
+  setTimeout(() => t?.remove(), 4000);
+}
+
+// 초기화 - DOM 준비 후 실행
+function _initChat() {
+  loadRooms();
+
+  // GlobalWS 핸들러 등록 (중복 방지 - 한 번만)
+  if (typeof GlobalWS !== 'undefined' && !window._chatWSInited) {
+    window._chatWSInited = true;
+    GlobalWS.on('notification', (msg) => {
+      const ev = msg.event || (msg.data && msg.data.event);
+      if (ev === 'match_accepted') {
+        loadRooms();
+        showChatToast('✅ 소개팅이 성사됐습니다!', true);
+      }
+      if (ev === 'match_request')  showChatToast('💌 새 소개팅 신청이 도착했습니다!', false);
+      if (ev === 'blocked_by')   showBlockedByBanner();
+      if (ev === 'unblocked_by') {
+        document.getElementById('chBlockedByBar')?.remove();
+        const inp = document.getElementById('chInput');
+        const btn = document.getElementById('chSendBtn');
+        if (inp) { inp.disabled = false; inp.placeholder = '진심을 담은 한 줄을 적어보세요...'; }
+        if (btn) btn.disabled = false;
+      }
+    });
+    GlobalWS.on('refresh', (msg) => {
+      const target = msg.target || (msg.data && msg.data.target);
+      if (target === 'chatrooms') loadRooms();
+    });
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initChat);
+} else {
+  _initChat();
+}
+</script>
+</body>
+</html>

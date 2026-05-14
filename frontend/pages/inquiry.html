@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>문의 · CHEMI LINE</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<style>
+  body { background: var(--ivory); }
+  .iq-wrap { max-width: 860px; margin: 0 auto; padding: 56px 48px 100px; }
+  @media (max-width: 640px) { .iq-wrap { padding: 32px 20px 60px; } }
+  .iq-eye { font-family: var(--font-mono); font-size: 11px; letter-spacing: .32em; text-transform: uppercase; color: var(--champagne-deep); display: inline-flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .iq-eye::before { content: ''; width: 32px; height: 1px; background: var(--champagne-deep); }
+  .iq-h1 { font-family: var(--font-display); font-size: clamp(36px, 5vw, 64px); font-weight: 300; line-height: 1.05; letter-spacing: -0.025em; margin-bottom: 16px; }
+  .iq-h1 em { font-style: italic; color: var(--wine); }
+  .iq-sub { font-size: 15px; line-height: 1.8; color: var(--text-muted); margin-bottom: 56px; }
+  .iq-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-md); padding: 40px; }
+  @media (max-width: 640px) { .iq-card { padding: 24px; } }
+  .iq-topics { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .iq-topic { padding: 9px 18px; border: 1px solid var(--line); border-radius: var(--r-pill); font-size: 16px; color: var(--text-muted); background: transparent; cursor: pointer; transition: all .25s var(--ease); font-family: var(--font-body); }
+  .iq-topic:hover { border-color: var(--bordeaux); color: var(--bordeaux); }
+  .iq-topic.on { background: var(--bordeaux); border-color: var(--bordeaux); color: var(--ivory); }
+  .iq-actions { display: flex; justify-content: flex-end; margin-top: 28px; }
+  .err-msg { color: var(--danger); font-size: 14px; margin-bottom: 12px; min-height: 18px; }
+  .ok-msg  { color: var(--success); font-size: 14px; margin-bottom: 12px; }
+
+  /* 문의 ID 박스 */
+  .iq-id-box { background: linear-gradient(135deg,rgba(58,14,20,.05),rgba(58,14,20,.1)); border: 1px solid var(--champagne); border-radius: var(--r-md); padding: 24px 28px; margin-top: 24px; }
+  .iq-id-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--champagne-deep); margin-bottom: 10px; }
+  .iq-id-value { font-family: var(--font-mono); font-size: 14px; color: var(--ink); word-break: break-all; background: var(--ivory); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 14px; margin-bottom: 10px; }
+  .iq-id-hint { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+  input[type=text], input[type=email], input[type=password],
+  input[type=number], textarea, select { font-size: 16px !important; }
+  @media (max-width: 640px) {
+    input, textarea { font-size: 16px !important; }
+    .iq-wrap { padding: 24px 16px 60px !important; }
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="../index.html" class="site-logo">CHEMI&nbsp;LINE</a>
+  <div class="site-nav-links">
+    <a href="match.html" class="snb">매칭</a>
+    <a href="chat.html" class="snb">채팅</a>
+    <a href="profile.html" class="snb">프로필</a>
+    <a href="inquiry.html" class="snb active">문의</a>
+    <button class="snb logout" onclick="logout()">로그아웃</button>
+  </div>
+</nav>
+
+<div class="iq-wrap">
+  <div class="iq-eye">Support · 문의</div>
+  <h1 class="iq-h1">궁금한 것이<br><em>있으신가요?</em></h1>
+  <p class="iq-sub">매니저가 직접 확인하고 1–2일 내로 답변드립니다.<br>비로그인 문의 시 이메일을 남겨주시면 답변 시 연락드립니다.</p>
+
+  <!-- 문의 작성 폼 -->
+  <div class="iq-card" id="iqFormCard">
+    <div class="field">
+      <label class="field-label">문의 유형</label>
+      <div class="iq-topics">
+        <button type="button" class="iq-topic on" data-topic="general">일반 문의</button>
+        <button type="button" class="iq-topic" data-topic="matching">매칭 문의</button>
+        <button type="button" class="iq-topic" data-topic="account">계정 문의</button>
+        <button type="button" class="iq-topic" data-topic="payment">결제 문의</button>
+        <button type="button" class="iq-topic" data-topic="other">기타</button>
+      </div>
+    </div>
+
+    <!-- 비로그인 시만 이메일 입력 표시 -->
+    <div class="field" id="emailField" style="display:none;">
+      <label class="field-label">답변받을 이메일 <span style="color:var(--danger);">*</span></label>
+      <input type="email" class="input" id="iqEmail" placeholder="답변을 받을 이메일 주소를 입력해주세요">
+      <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">로그인하지 않은 경우 이 이메일로 관리자가 직접 답변드립니다.</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">제목</label>
+      <input type="text" class="input" id="iqTitle" placeholder="문의 제목을 입력해주세요">
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <label class="field-label">내용</label>
+      <textarea class="input textarea" id="iqBody" rows="7" style="resize:none;" placeholder="문의 내용을 자세히 적어주세요. 매니저가 직접 확인합니다."></textarea>
+    </div>
+    <div class="err-msg" id="iqErr"></div>
+    <div class="iq-actions">
+      <button type="button" class="btn btn-primary" id="iqBtn" onclick="sendInquiry()">
+        문의 보내기
+        <svg width="14" height="10" viewBox="0 0 16 12" fill="none"><path d="M1 6h14m0 0L10 1m5 5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <!-- 제출 후: 문의 ID 안내 (비로그인 전용) -->
+    <div class="iq-id-box" id="iqIdBox" style="display:none;">
+      <div class="iq-id-label">✅ 문의가 접수됐습니다 — 문의 번호를 저장해두세요</div>
+      <div class="iq-id-value" id="iqIdValue"></div>
+      <button onclick="copyInquiryId()" style="padding:7px 16px;border-radius:999px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:12px;font-family:var(--font-body);margin-bottom:12px;">📋 복사</button>
+      <div class="iq-id-hint">
+        이 번호로 아래 <b>"문의 번호로 답변 확인"</b> 칸에서 언제든지 답변을 확인하실 수 있습니다.<br>
+        또한 입력하신 이메일로 관리자가 직접 답변 드립니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 비로그인 전용: 문의 번호로 답변 확인 -->
+  <div id="iqLookupSection" style="display:none;margin-top:48px;">
+    <div class="iq-eye">문의 번호로 답변 확인</div>
+    <div class="iq-card">
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">문의 접수 후 받은 번호를 입력하면 답변 여부를 확인할 수 있습니다.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input type="text" class="input" id="iqLookupId" placeholder="문의 번호를 입력하세요" style="flex:1;min-width:200px;">
+        <button class="btn btn-primary" onclick="lookupInquiry()" style="white-space:nowrap;">확인하기</button>
+      </div>
+      <div id="iqLookupResult" style="margin-top:20px;"></div>
+    </div>
+  </div>
+
+  <!-- 로그인 사용자: 내 문의 내역 -->
+  <div id="myInquiriesSection" style="display:none;margin-top:48px;">
+    <div class="iq-eye">My Inquiries · 내 문의 내역</div>
+    <div id="myInquiries" style="margin-top:20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="color:var(--text-muted);font-size:16px;text-align:center;padding:40px 0;">불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/api.js"></script>
+<script>
+const BASE  = window.location.origin;
+const TOKEN = localStorage.getItem('ss_token');
+const AUTH  = TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {};
+let selectedTopic   = 'general';
+let lastInquiryId   = '';
+
+function escapeHtml(v) {
+  return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// 로그인 여부에 따라 UI 분기
+(function init() {
+  if (!TOKEN) {
+    document.getElementById('emailField').style.display = 'block';
+    document.getElementById('iqLookupSection').style.display = 'block';
+  } else {
+    document.getElementById('myInquiriesSection').style.display = 'block';
+    loadMyInquiries();
+  }
+})();
+
+document.querySelectorAll('.iq-topic').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.iq-topic').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    selectedTopic = btn.dataset.topic;
+  });
+});
+
+async function sendInquiry() {
+  const title    = document.getElementById('iqTitle').value.trim();
+  const body     = document.getElementById('iqBody').value.trim();
+  const emailEl  = document.getElementById('iqEmail');
+  const email    = emailEl ? emailEl.value.trim() : '';
+  const err      = document.getElementById('iqErr');
+  const btn      = document.getElementById('iqBtn');
+  err.className  = 'err-msg';
+  err.textContent = '';
+
+  if (!title) { err.textContent = '제목을 입력해주세요.'; return; }
+  if (!body)  { err.textContent = '내용을 입력해주세요.'; return; }
+  if (!TOKEN && !email) { err.textContent = '답변받을 이메일을 입력해주세요.'; emailEl?.focus(); return; }
+
+  btn.disabled = true; btn.textContent = '전송 중…';
+  try {
+    const headers = { 'Content-Type': 'application/json', ...AUTH };
+    const payload = { title, body, topic: selectedTopic };
+    if (!TOKEN && email) payload.contact_email = email;
+
+    const res = await fetch(`${BASE}/api/inquiry`, { method:'POST', headers, body: JSON.stringify(payload) });
+    const d   = await res.json();
+    if (!res.ok) { err.textContent = d.error || '전송 실패'; return; }
+
+    // 폼 초기화
+    document.getElementById('iqTitle').value = '';
+    document.getElementById('iqBody').value  = '';
+    if (emailEl) emailEl.value = '';
+
+    if (!TOKEN) {
+      // 비로그인: 문의 ID 안내 표시
+      lastInquiryId = d.id || '';
+      document.getElementById('iqIdValue').textContent = lastInquiryId;
+      document.getElementById('iqIdBox').style.display = 'block';
+    } else {
+      err.className = 'ok-msg';
+      err.textContent = '✅ 문의가 접수됐습니다. 1–2일 내로 답변드립니다.';
+      loadMyInquiries();
+    }
+  } catch { err.textContent = '서버에 연결할 수 없습니다.'; }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '문의 보내기 <svg width="14" height="10" viewBox="0 0 16 12" fill="none"><path d="M1 6h14m0 0L10 1m5 5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  }
+}
+
+function copyInquiryId() {
+  navigator.clipboard?.writeText(lastInquiryId).catch(() => {});
+  const btn = event.target;
+  btn.textContent = '✓ 복사됨';
+  setTimeout(() => { btn.textContent = '📋 복사'; }, 1500);
+}
+
+// 문의 번호로 답변 조회 (비로그인 전용)
+async function lookupInquiry() {
+  const id     = document.getElementById('iqLookupId').value.trim();
+  const result = document.getElementById('iqLookupResult');
+  if (!id) { result.innerHTML = '<div style="color:var(--danger);font-size:13px;">문의 번호를 입력해주세요.</div>'; return; }
+
+  result.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">조회 중...</div>';
+  try {
+    const res = await fetch(`${BASE}/api/inquiry/status/${encodeURIComponent(id)}`);
+    const d   = await res.json();
+    if (!res.ok) {
+      result.innerHTML = `<div style="color:var(--danger);font-size:13px;">${escapeHtml(d.error || '문의를 찾을 수 없습니다.')}</div>`;
+      return;
+    }
+    const answered = d.status === 'answered';
+    const topicMap = { general:'일반', matching:'매칭', account:'계정', payment:'결제', other:'기타' };
+    result.innerHTML = `
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);padding:20px 24px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+          <span style="padding:3px 10px;border-radius:999px;background:${answered?'rgba(39,174,96,.12)':'rgba(243,156,18,.12)'};color:${answered?'#27AE60':'#E67E22'};font-size:11px;font-weight:600;">${answered?'답변완료':'대기중'}</span>
+          <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:.15em;color:var(--text-muted);">${escapeHtml(topicMap[d.topic] || d.topic || '일반')}</span>
+          <span style="font-size:12px;color:var(--text-muted);margin-left:auto;">${new Date(d.created_at).toLocaleDateString('ko',{year:'numeric',month:'long',day:'numeric'})}</span>
+        </div>
+        <div style="font-weight:600;font-size:15px;margin-bottom:6px;">${escapeHtml(d.title)}</div>
+        ${answered && d.answer ? `
+          <div style="margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(58,14,20,.03),rgba(58,14,20,.08));border-radius:var(--r-sm);border-left:3px solid var(--bordeaux);">
+            <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--champagne-deep);margin-bottom:8px;">매니저 답변</div>
+            <div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;">${escapeHtml(d.answer)}</div>
+            ${d.answered_at ? `<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">${new Date(d.answered_at).toLocaleDateString('ko',{month:'long',day:'numeric'})}</div>` : ''}
+          </div>` : answered ? '' : `
+          <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">매니저가 검토 중입니다. 조금만 기다려주세요.</div>`}
+      </div>`;
+  } catch { result.innerHTML = '<div style="color:var(--danger);font-size:13px;">조회 중 오류가 발생했습니다.</div>'; }
+}
+
+// 로그인 사용자: 내 문의 내역
+async function loadMyInquiries() {
+  const wrap = document.getElementById('myInquiries');
+  if (!wrap || !TOKEN) return;
+  wrap.innerHTML = '<div style="color:var(--text-muted);font-size:16px;text-align:center;padding:30px 0;">불러오는 중...</div>';
+  try {
+    const res  = await fetch(`${BASE}/api/inquiry`, { headers: AUTH });
+    const rows = await res.json().catch(() => []);
+    if (!res.ok) { wrap.innerHTML = `<div style="color:var(--danger);text-align:center;padding:30px 0;">${escapeHtml(rows.error||'오류')}</div>`; return; }
+    if (!Array.isArray(rows) || !rows.length) { wrap.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:30px 0;">문의 내역이 없습니다.</div>'; return; }
+    const topicMap = { general:'일반', matching:'매칭', account:'계정', payment:'결제', other:'기타' };
+    wrap.innerHTML = rows.map(r => `
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);padding:24px 28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="padding:3px 10px;border-radius:999px;background:${r.status==='answered'?'rgba(39,174,96,.12)':'rgba(243,156,18,.12)'};color:${r.status==='answered'?'#27AE60':'#E67E22'};font-size:11px;font-weight:600;">${r.status==='answered'?'답변완료':'대기중'}</span>
+            <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);">${escapeHtml(topicMap[r.topic]||r.topic||'일반')}</span>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted);">${new Date(r.created_at).toLocaleDateString('ko',{year:'numeric',month:'long',day:'numeric'})}</span>
+        </div>
+        <div style="font-weight:600;font-size:15px;margin-bottom:8px;">${escapeHtml(r.title)}</div>
+        <div style="font-size:14px;color:var(--text-muted);line-height:1.7;${r.answer?'padding-bottom:16px;border-bottom:1px solid var(--line);':''}white-space:pre-wrap;">${escapeHtml(r.content||'')}</div>
+        ${r.answer ? `
+          <div style="margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(58,14,20,.03),rgba(58,14,20,.06));border-radius:var(--r-sm);border-left:3px solid var(--bordeaux);">
+            <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--champagne-deep);margin-bottom:10px;">매니저 답변</div>
+            <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;">${escapeHtml(r.answer)}</div>
+            ${r.answered_at ? `<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">${new Date(r.answered_at).toLocaleDateString('ko',{month:'long',day:'numeric'})}</div>` : ''}
+          </div>` : ''}
+      </div>`).join('');
+  } catch { wrap.innerHTML = '<div style="color:var(--danger);text-align:center;padding:30px 0;">불러오기 실패</div>'; }
+}
+
+function logout() {
+  localStorage.removeItem('ss_token');
+  localStorage.removeItem('ss_user');
+  window.location.href = window.location.origin;
+}
+</script>
+</body>
+</html>

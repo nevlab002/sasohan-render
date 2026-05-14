@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>만남 제안 · CHEMI LINE</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<style>
+body { background: var(--ivory); }
+.rm-wrap { max-width: 100%; margin: 0 auto; padding: 56px 48px 100px; overflow-x: hidden; }
+@media (max-width: 640px) { .rm-wrap { padding: 24px 16px 60px; } .rm-card { padding: 20px 16px; } }
+
+.rm-eye { font-family:var(--font-mono); font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--champagne-deep); display:inline-flex; align-items:center; gap:14px; margin-bottom:22px; }
+.rm-eye::before { content:''; width:32px; height:1px; background:var(--champagne-deep); }
+.rm-h1 { font-family:var(--font-display); font-size:clamp(40px,5.5vw,72px); font-weight:300; line-height:1.05; letter-spacing:-.025em; color:var(--ink); margin-bottom:16px; }
+.rm-h1 em { font-style:italic; color:var(--wine); font-weight:400; }
+.rm-sub { font-size:15px; line-height:1.85; color:var(--text-muted); max-width:540px; margin-bottom:56px; }
+
+.rm-grid { display:grid; grid-template-columns:1fr; gap:36px; }
+@media (min-width:880px) { .rm-grid { grid-template-columns:1.4fr 1fr; gap:48px; align-items:start; } }
+
+.rm-card { background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:36px; }
+@media (max-width:640px) { .rm-card { padding:24px 20px; } }
+
+.rm-section { margin-bottom:36px; }
+.rm-section:last-child { margin-bottom:0; }
+.rm-section-no { font-family:var(--font-mono); font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--champagne-deep); margin-bottom:12px; }
+.rm-section h3 { font-family:var(--font-display); font-size:24px; font-weight:400; letter-spacing:-.015em; color:var(--ink); margin-bottom:22px; }
+.rm-section h3 em { font-style:italic; color:var(--wine); }
+
+/* 날짜 */
+.rm-dates { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+@media (max-width:880px) { .rm-dates { grid-template-columns:repeat(4,1fr); } }
+@media (max-width:400px) { .rm-dates { grid-template-columns:repeat(3,1fr); } }
+.rm-date { aspect-ratio:1; min-height:56px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--ivory); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:all .2s; }
+.rm-date:hover { border-color:var(--bordeaux); }
+.rm-date.is-active { background:var(--bordeaux); border-color:var(--bordeaux); }
+.rm-date.is-active .dow,.rm-date.is-active .day,.rm-date.is-active .mo { color:var(--ivory); }
+.rm-date.is-active .day { color:var(--champagne); }
+.rm-date.is-disabled { opacity:.35; pointer-events:none; }
+.rm-date .dow { font-family:var(--font-mono); font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-subtle); margin-bottom:4px; }
+.rm-date .day { font-family:var(--font-display); font-size:18px; font-weight:400; color:var(--ink); line-height:1; }
+.rm-date .mo  { font-family:var(--font-mono); font-size:8px; letter-spacing:.1em; color:var(--text-subtle); margin-top:2px; }
+
+/* 시간 */
+.rm-times { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+@media (max-width:540px) { .rm-times { grid-template-columns:repeat(3,1fr); } }
+.rm-time { padding:14px 8px; min-height:48px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--ivory); cursor:pointer; text-align:center; transition:all .2s; font-family:var(--font-mono); font-size:13px; letter-spacing:.08em; color:var(--text-muted); display:flex; align-items:center; justify-content:center; }
+.rm-time:hover { border-color:var(--bordeaux); color:var(--bordeaux); }
+.rm-time.is-active { background:var(--bordeaux); color:var(--ivory); border-color:var(--bordeaux); }
+
+/* 장소 */
+.rm-places { display:grid; gap:10px; }
+.rm-place { padding:16px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--ivory); cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:12px; }
+.rm-place:hover { border-color:var(--bordeaux); }
+.rm-place.is-active { border-color:var(--bordeaux); background:rgba(58,14,20,.03); }
+.rm-place .dot { width:14px; height:14px; border:1px solid var(--line); border-radius:50%; flex-shrink:0; transition:all .2s; }
+.rm-place.is-active .dot { background:var(--bordeaux); border-color:var(--bordeaux); box-shadow:inset 0 0 0 3px var(--ivory); }
+.rm-place-name { font-family:var(--font-display); font-size:16px; font-weight:400; color:var(--ink); margin-bottom:2px; }
+.rm-place-meta { font-family:var(--font-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-subtle); }
+
+/* 직접 입력 */
+.rm-custom-wrap { margin-top:10px; display:none; }
+.rm-custom-wrap.show { display:block; }
+
+.rm-foot { margin-top:32px; padding-top:24px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+.rm-foot-meta { font-family:var(--font-mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-muted); }
+
+/* 요약 */
+.rm-summary { background:var(--ink); color:var(--ivory); border-radius:var(--r-md); padding:28px; position:sticky; top:88px; overflow:hidden; }
+.rm-summary::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at top right,rgba(212,182,121,.18),transparent 55%); pointer-events:none; }
+.rm-sum-head { position:relative; z-index:1; margin-bottom:28px; }
+.rm-sum-head .lbl { font-family:var(--font-mono); font-size:10.5px; letter-spacing:.28em; color:var(--champagne); text-transform:uppercase; margin-bottom:8px; }
+.rm-sum-head h3 { font-family:var(--font-display); font-size:32px; font-weight:300; letter-spacing:-.02em; line-height:1.1; }
+.rm-sum-head h3 em { font-style:italic; color:var(--champagne); font-weight:400; }
+.rm-sum-with { position:relative; z-index:1; display:flex; gap:14px; align-items:center; padding:18px 0; border-top:1px solid rgba(212,182,121,.18); border-bottom:1px solid rgba(212,182,121,.18); margin-bottom:24px; }
+.rm-sum-pic { width:52px; height:52px; border-radius:50%; background:linear-gradient(160deg,#C9A48F,#2F1F1A); flex-shrink:0; background-size:cover; background-position:center top; image-rendering:-webkit-optimize-contrast; image-rendering:smooth; }
+.rm-sum-name { font-family:var(--font-display); font-size:22px; font-weight:400; line-height:1.1; margin-bottom:4px; }
+.rm-sum-name em { font-style:italic; color:var(--champagne); }
+.rm-sum-role { font-family:var(--font-mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:rgba(245,239,230,.55); }
+.rm-sum-table { position:relative; z-index:1; margin-bottom:28px; }
+.rm-sum-table > div { display:grid; grid-template-columns:90px 1fr; padding:14px 0; border-bottom:1px solid rgba(212,182,121,.12); }
+.rm-sum-table .k { font-family:var(--font-mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,239,230,.5); }
+.rm-sum-table .v { font-family:var(--font-display); font-size:16px; color:var(--ivory); font-style:italic; }
+.rm-sum-table .v.empty { color:rgba(245,239,230,.35); font-style:normal; font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
+.rm-sum-cta { position:relative; z-index:1; width:100%; padding:16px; background:var(--champagne); color:var(--ink); border:none; border-radius:var(--r-pill); font-family:var(--font-body); font-size:14px; font-weight:600; cursor:pointer; transition:all .3s; display:flex; align-items:center; justify-content:center; gap:10px; }
+.rm-sum-cta:hover { background:var(--ivory); }
+.rm-sum-cta:disabled { opacity:.5; cursor:not-allowed; }
+.rm-sum-note { position:relative; z-index:1; margin-top:16px; font-size:12px; line-height:1.7; color:rgba(245,239,230,.6); text-align:center; }
+
+/* 확정 상태 표시 */
+.rm-status-card { background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:28px; margin-top:24px; }
+.rm-status-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(229,224,222,.4); }
+.rm-status-item:last-child { border-bottom:none; }
+  @media (max-width: 640px) {
+    input, textarea { font-size: 16px !important; }
+    .rm-wrap { padding: 24px 16px 60px !important; }
+    .rm-card { padding: 20px 16px !important; }
+    .rm-dates { grid-template-columns: repeat(4, 1fr) !important; }
+    .rm-times { grid-template-columns: repeat(3, 1fr) !important; }
+    .rm-time { min-height: 48px !important; font-size: 13px !important; }
+    .rm-date { min-height: 56px !important; }
+    .rm-date .day { font-size: 16px !important; }
+    .rm-grid { grid-template-columns: 1fr !important; }
+    .rm-summary { position: static !important; }
+  }
+  @media (max-width: 400px) {
+    .rm-dates { grid-template-columns: repeat(3, 1fr) !important; }
+    .rm-times { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="../index.html" class="site-logo">CHEMI&nbsp;LINE</a>
+  <div class="site-nav-links">
+    <a href="match.html" class="snb">매칭</a>
+    <a href="chat.html" class="snb">채팅</a>
+    <a href="profile.html" class="snb">프로필</a>
+    <a href="inquiry.html" class="snb">문의</a>
+    <button class="snb logout" onclick="logout()">로그아웃</button>
+  </div>
+</nav>
+
+<div class="rm-wrap">
+  <div class="rm-eye">Meeting · 만남 제안</div>
+  <h1 class="rm-h1">첫 만남, <em>천천히</em><br>그 자리를 정합니다.</h1>
+  <p class="rm-sub" id="rmSub">상대방과 만남 일정을 제안합니다. 날짜, 시간, 장소를 선택하면 상대에게 바로 전달됩니다.</p>
+
+  <div class="rm-grid">
+    <!-- 왼쪽: 폼 -->
+    <div class="rm-card">
+      <div class="rm-section">
+        <div class="rm-section-no">Step 01</div>
+        <h3>날짜를 <em>고르세요</em></h3>
+        <div class="rm-dates" id="rmDates">
+          <!-- JS로 생성 -->
+        </div>
+      </div>
+
+      <div class="rm-section">
+        <div class="rm-section-no">Step 02</div>
+        <h3>시간을 <em>고르세요</em></h3>
+        <div class="rm-times" id="rmTimes">
+          <div class="rm-time" data-time="11:00">11:00</div>
+          <div class="rm-time" data-time="12:00">12:00</div>
+          <div class="rm-time" data-time="13:00">13:00</div>
+          <div class="rm-time" data-time="14:00">14:00</div>
+          <div class="rm-time" data-time="15:00">15:00</div>
+          <div class="rm-time" data-time="17:00">17:00</div>
+          <div class="rm-time is-active" data-time="19:00">19:00</div>
+          <div class="rm-time" data-time="19:30">19:30</div>
+          <div class="rm-time" data-time="20:00">20:00</div>
+          <div class="rm-time" data-time="20:30">20:30</div>
+          <div class="rm-time" data-time="21:00">21:00</div>
+        </div>
+      </div>
+
+      <div class="rm-section">
+        <div class="rm-section-no">Step 03</div>
+        <h3>장소를 <em>제안하세요</em></h3>
+        <div class="rm-places" id="rmPlaces">
+          <div class="rm-place" data-place="Wine Bar or Pub" onclick="pickPlace(this)">
+            <div class="dot"></div>
+            <div><div class="rm-place-name">Wine Bar or Pub</div><div class="rm-place-meta">와인 바 or 펍</div></div>
+          </div>
+          <div class="rm-place" data-place="Brunch Café" onclick="pickPlace(this)">
+            <div class="dot"></div>
+            <div><div class="rm-place-name">Brunch Café</div><div class="rm-place-meta">브런치 카페</div></div>
+          </div>
+          <div class="rm-place" data-place="Drive" onclick="pickPlace(this)">
+            <div class="dot"></div>
+            <div><div class="rm-place-name">Drive</div><div class="rm-place-meta">가벼운 드라이브</div></div>
+          </div>
+          <div class="rm-place" data-place="__custom__" onclick="pickPlace(this)">
+            <div class="dot"></div>
+            <div><div class="rm-place-name">직접 입력하기</div><div class="rm-place-meta">원하는 장소를 적어주세요</div></div>
+          </div>
+        </div>
+        <div class="rm-custom-wrap" id="rmCustomWrap">
+          <input type="text" class="input" id="rmCustomPlace" style="font-size:16px;" placeholder="장소명을 입력하세요 (예: 홍대 앞 카페 OO)" oninput="updateSummary()">
+        </div>
+      </div>
+
+      <div class="rm-section" style="margin-bottom:0;">
+        <div class="rm-section-no">Step 04 — 선택</div>
+        <h3>한 마디 <em>덧붙이기</em></h3>
+        <textarea class="input" id="rmNote" rows="3" style="font-size:16px;resize:none;" placeholder="가벼운 인사나 만남에 대한 기대를 적어주세요. (선택)" oninput="updateSummary()"></textarea>
+      </div>
+
+      <div class="rm-foot">
+        <span class="rm-foot-meta">상대방에게 즉시 전달됩니다</span>
+        <a href="#" onclick="event.preventDefault();goBack()" class="btn btn-ghost">← 채팅으로 돌아가기</a>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 실시간 요약 -->
+    <aside>
+      <div class="rm-summary">
+        <div class="rm-sum-head">
+          <div class="lbl">Meeting · Summary</div>
+          <h3>이렇게 <em>제안</em>해요.</h3>
+        </div>
+        <div class="rm-sum-with">
+          <div class="rm-sum-pic" id="sumPic"></div>
+          <div>
+            <div class="rm-sum-name" id="sumName">—</div>
+            <div class="rm-sum-role" id="sumRole">상대방</div>
+          </div>
+        </div>
+        <div class="rm-sum-table">
+          <div><span class="k">Date</span><span class="v empty" id="sumDate">선택 안 함</span></div>
+          <div><span class="k">Time</span><span class="v" id="sumTime">19:00</span></div>
+          <div><span class="k">Place</span><span class="v empty" id="sumPlace">선택 안 함</span></div>
+          <div><span class="k">Note</span><span class="v empty" id="sumNote">— 작성하지 않음 —</span></div>
+        </div>
+        <button class="rm-sum-cta" id="sumCta" onclick="submitProposal(this)">
+          상대방에게 제안하기 →
+        </button>
+        <p class="rm-sum-note">상대방이 수락하면 만남이 확정됩니다.</p>
+      </div>
+
+      <!-- 이미 진행 중인 제안 상태 -->
+      <div id="existingProposals" style="display:none; margin-top:20px;">
+        <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--champagne-deep);margin-bottom:14px;">이전 제안 내역</div>
+        <div id="proposalList"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script src="../assets/api.js"></script>
+<script>
+const _token = localStorage.getItem('ss_token');
+const _user  = (() => { try { return JSON.parse(localStorage.getItem('ss_user')); } catch { return null; } })();
+if (!_token || !_user) { window.location.href = window.location.origin; }
+
+const BASE    = window.location.origin;
+const AUTH    = { Authorization: `Bearer ${_token}` };
+const roomId  = new URLSearchParams(location.search).get('room');
+const me      = _user;
+
+let selectedDate  = '';
+let selectedTime  = '19:00';
+let selectedPlace = '';
+let partnerInfo   = {};
+
+// ── 날짜 동적 생성 (오늘 포함 14일) ──────
+function buildDates() {
+  const wrap = document.getElementById('rmDates');
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const today = new Date();
+  wrap.innerHTML = '';
+
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const iso  = d.toISOString().split('T')[0];
+    const dow  = DAYS[d.getDay()];
+    const day  = d.getDate();
+    const mo   = MONTHS[d.getMonth()];
+    const el   = document.createElement('div');
+    el.className = 'rm-date' + (i === 0 ? ' is-disabled' : '');
+    el.dataset.date = iso;
+    el.innerHTML = `<span class="dow">${dow}</span><span class="day">${day}</span><span class="mo">${mo}</span>`;
+    if (i > 0) el.onclick = () => pickDate(el, iso, day, mo);
+    wrap.appendChild(el);
+  }
+}
+
+function pickDate(el, iso, day, mo) {
+  document.querySelectorAll('.rm-date').forEach(x => x.classList.remove('is-active'));
+  el.classList.add('is-active');
+  selectedDate = iso;
+  const sumDate = document.getElementById('sumDate');
+  sumDate.textContent = `${mo} ${day}일`;
+  sumDate.classList.remove('empty');
+  updateSummary();
+}
+
+// ── 시간 선택 ──────────────────────────
+document.querySelectorAll('.rm-time').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.rm-time').forEach(x => x.classList.remove('is-active'));
+    el.classList.add('is-active');
+    selectedTime = el.dataset.time;
+    const sumTime = document.getElementById('sumTime');
+    sumTime.textContent = selectedTime;
+    sumTime.classList.remove('empty');
+  });
+});
+
+// ── 장소 선택 ──────────────────────────
+function pickPlace(el) {
+  document.querySelectorAll('.rm-place').forEach(x => x.classList.remove('is-active'));
+  el.classList.add('is-active');
+  const customWrap = document.getElementById('rmCustomWrap');
+  if (el.dataset.place === '__custom__') {
+    customWrap.classList.add('show');
+    selectedPlace = document.getElementById('rmCustomPlace').value.trim() || '';
+  } else {
+    customWrap.classList.remove('show');
+    selectedPlace = el.dataset.place;
+  }
+  updateSummary();
+}
+
+// ── 요약 실시간 업데이트 ───────────────
+function updateSummary() {
+  // 장소 (직접입력 중일 때)
+  const customInput = document.getElementById('rmCustomPlace');
+  const activePlaceEl = document.querySelector('.rm-place.is-active');
+  if (activePlaceEl?.dataset.place === '__custom__') {
+    selectedPlace = customInput.value.trim();
+  }
+  const sumPlace = document.getElementById('sumPlace');
+  if (selectedPlace) { sumPlace.textContent = selectedPlace; sumPlace.classList.remove('empty'); }
+  else { sumPlace.textContent = '선택 안 함'; sumPlace.classList.add('empty'); }
+
+  // 메모
+  const note = document.getElementById('rmNote').value.trim();
+  const sumNote = document.getElementById('sumNote');
+  if (note) { sumNote.textContent = note; sumNote.classList.remove('empty'); }
+  else { sumNote.textContent = '— 작성하지 않음 —'; sumNote.classList.add('empty'); }
+}
+
+// ── 파트너 정보 로드 ───────────────────
+async function loadRoomInfo() {
+  if (!roomId) {
+    document.getElementById('rmSub').textContent = '채팅방을 통해 접속해주세요.';
+    return;
+  }
+  try {
+    const resp = await fetch(`${BASE}/api/room/${roomId}`, { headers: AUTH });
+    if (resp.status === 401) {
+      localStorage.removeItem('ss_token'); localStorage.removeItem('ss_user');
+      alert('로그인이 만료됐습니다. 다시 로그인해주세요.');
+      window.location.href = `${BASE}/pages/login.html`; return;
+    }
+    const data = await resp.json();
+
+    // 파트너 파악 (owner/visual 구분)
+    const isOwner = data.owner_id === me?.id;
+    const pName   = isOwner ? (data.visual_name  || '상대방') : (data.owner_name  || '상대방');
+    const pPhotos = isOwner ? (data.visual_photos || [])      : (data.owner_photos || []);
+    const pJob    = isOwner ? (data.visual_job    || '')      : (data.owner_job    || '');
+    partnerInfo   = { name: pName, photos: pPhotos, job: pJob };
+
+    // 요약 패널 파트너 정보
+    document.getElementById('sumName').innerHTML = `${pName} <em>—</em>`;
+    document.getElementById('sumRole').textContent = pJob || '캐미 회원';
+    const picEl = document.getElementById('sumPic');
+    const photo = pPhotos[0];
+    if (photo) {
+      const abs = photo.startsWith('http') ? photo : BASE + photo;
+      picEl.style.backgroundImage = `url(${abs})`;
+    }
+
+    // 기존 제안 내역 표시
+    if (data.proposals?.length) {
+      showExistingProposals(data.proposals, data.owner_id === me?.id);
+    }
+
+  } catch(e) {
+    console.error('방 정보 로드 실패:', e);
+  }
+}
+
+// ── 기존 제안 내역 ─────────────────────
+function showExistingProposals(proposals, iAmOwner) {
+  const wrap = document.getElementById('existingProposals');
+  const list = document.getElementById('proposalList');
+  wrap.style.display = 'block';
+  const statusLabel = { pending:'⏳ 대기중', accepted:'✅ 수락됨', rejected:'❌ 거절됨' };
+  list.innerHTML = proposals.map(p => {
+    const dt = new Date(p.date_time || p.proposed_date);
+    const dateStr = dt.toLocaleDateString('ko',{month:'long',day:'numeric',weekday:'short'});
+    const timeStr = dt.toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'});
+    const canAccept = p.status === 'pending' && !iAmOwner;
+    return `<div class="rm-status-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-family:var(--font-display);font-size:17px;margin-bottom:4px;">${p.place||p.place_name||'장소 미정'}</div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">${dateStr} ${timeStr}</div>
+          ${p.note?`<div style="font-size:13px;color:var(--text-muted);margin-top:6px;">${p.note}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+          <span style="font-size:12px;font-weight:600;">${statusLabel[p.status]||p.status}</span>
+          ${canAccept?`<button onclick="respondProposal('${p.id}','accept')" style="padding:6px 16px;border-radius:999px;background:var(--bordeaux);color:var(--ivory);border:none;cursor:pointer;font-size:12px;">수락</button>
+          <button onclick="respondProposal('${p.id}','reject')" style="padding:6px 16px;border-radius:999px;background:transparent;color:var(--text-muted);border:1px solid var(--line);cursor:pointer;font-size:12px;">거절</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 수락/거절 ─────────────────────────
+async function respondProposal(propId, action) {
+  try {
+    const r = await fetch(`${BASE}/api/room/${roomId}/propose/${propId}/${action}`, { method:'PATCH', headers:AUTH });
+    const d = await r.json();
+    if (action === 'accept') {
+      alert('✅ 만남을 수락했습니다! 즐거운 시간 되세요.');
+    } else {
+      alert(d.closed ? '소개팅이 종료됐습니다.' : `거절했습니다. (${d.reject_count}/3회)`);
+    }
+    await loadRoomInfo();
+  } catch { alert('오류가 발생했습니다.'); }
+}
+
+// ── 제안 전송 ─────────────────────────
+async function submitProposal(btn) {
+  if (!roomId) { alert('채팅방 정보가 없습니다. 채팅에서 다시 접근해주세요.'); return; }
+  if (!selectedDate) { alert('날짜를 선택해주세요.'); return; }
+  if (!selectedPlace) { alert('장소를 선택하거나 입력해주세요.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '전송 중…';
+
+  const note = document.getElementById('rmNote').value.trim();
+
+  try {
+    const r = await fetch(`${BASE}/api/room/${roomId}/propose`, {
+      method: 'POST',
+      headers: { ...AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date_time:     selectedDate + 'T' + selectedTime,
+        place:         selectedPlace,
+        note:          note,
+        // 하위호환
+        proposed_date: selectedDate + 'T' + selectedTime,
+        place_name:    selectedPlace,
+      })
+    });
+    const d = await r.json();
+    if (!r.ok) { alert(d.error || '전송 실패'); return; }
+
+    // 성공 피드백
+    btn.textContent = '✅ 전송됐습니다!';
+    btn.style.background = '#27AE60';
+    btn.style.borderColor = '#27AE60';
+
+    setTimeout(() => {
+      alert(`${partnerInfo.name || '상대방'}님께 만남 제안이 전달됐습니다.\n수락하면 알림을 드립니다.`);
+      history.back();
+    }, 800);
+
+  } catch(e) {
+    alert('오류: ' + e.message);
+  } finally {
+    // 전송 실패 시 버튼 복원 (성공 시에는 페이지 이동)
+    if (!btn.textContent.includes('✅')) {
+      btn.disabled = false;
+      btn.textContent = '상대방에게 제안하기 →';
+      btn.style.background = '';
+      btn.style.borderColor = '';
+    }
+  }
+}
+
+// ── 뒤로 가기 ──────────────────────────
+function goBack() {
+  if (roomId) window.location.href = `chat.html?room=${roomId}`;
+  else history.back();
+}
+
+function logout() {
+  localStorage.removeItem('ss_token');
+  localStorage.removeItem('ss_user');
+  window.location.href = window.location.origin;
+}
+
+// ── 초기화 ────────────────────────────
+buildDates();
+loadRoomInfo();
+</script>
+</body>
+</html>

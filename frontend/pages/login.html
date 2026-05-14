@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로그인 · CHEMI LINE</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<style>
+  body { background: var(--ink); min-height: 100vh; }
+
+  .lg-shell {
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  @media (min-width: 1000px) { .lg-shell { grid-template-columns: 1fr 0.85fr; } }
+
+  /* Left: editorial scene */
+  .lg-scene {
+    position: relative; overflow: hidden;
+    background: linear-gradient(155deg, #4D1620 0%, #2A0B11 60%, #0F0507 100%);
+    color: var(--ivory); padding: 56px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  @media (max-width: 100%) { .lg-scene { padding: 40px 24px; min-height: 320px; } }
+
+  .lg-scene::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 20%, rgba(212,182,121,0.16), transparent 55%); pointer-events: none; }
+
+  .lg-top { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+  .lg-top a { font-family: var(--font-display); font-size: 22px; font-weight: 500; letter-spacing: 0.32em; color: var(--ivory); text-decoration: none; }
+  .lg-top span { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; color: rgba(245,239,230,0.5); text-transform: uppercase; }
+
+  .lg-mid { position: relative; z-index: 2; }
+  .lg-mid .eye { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.32em; color: var(--champagne); text-transform: uppercase; margin-bottom: 28px; display: inline-flex; align-items: center; gap: 14px; }
+  .lg-mid .eye::before { content: ''; width: 32px; height: 1px; background: var(--champagne); }
+  .lg-mid h1 { font-family: var(--font-display); font-size: clamp(38px, 4.5vw, 60px); font-weight: 300; line-height: 1.1; letter-spacing: -0.02em; }
+  .lg-mid h1 em { font-style: italic; color: var(--champagne); font-weight: 400; }
+
+  .lg-bot { position: relative; z-index: 2; }
+  .lg-bot blockquote { font-family: var(--font-display); font-size: 18px; font-weight: 300; line-height: 1.55; font-style: italic; color: rgba(245,239,230,0.85); border-left: 1px solid var(--champagne); padding-left: 20px; margin-bottom: 14px; }
+  .lg-bot cite { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.24em; color: rgba(245,239,230,0.5); text-transform: uppercase; font-style: normal; }
+
+  .lg-card-deco {
+    position: absolute; right: -60px; top: 35%;
+    width: 220px; aspect-ratio: 3/4;
+    background: linear-gradient(160deg, #BFA189 0%, #6B4F44 50%, #2F1F1A 100%);
+    border-radius: 2px; transform: rotate(7deg);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    z-index: 1;
+  }
+  @media (max-width: 100%) { .lg-card-deco { display: none; } }
+
+  /* Right: form */
+  .lg-form { padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; background: var(--ivory); }
+  @media (max-width: 640px) { .lg-form { padding: 36px 22px; } }
+  .lg-form-wrap { width: 100%; max-width: 420px; margin: 0 auto; }
+
+  .lg-form .eye { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.28em; color: var(--champagne-deep); text-transform: uppercase; margin-bottom: 20px; }
+  .lg-form h2 { font-family: var(--font-display); font-size: 38px; font-weight: 300; letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 16px; color: var(--ink); }
+  .lg-form h2 em { font-style: italic; color: var(--wine); font-weight: 400; }
+  .lg-form p.sub { font-size: 14px; line-height: 1.7; color: var(--text-muted); margin-bottom: 40px; }
+
+  .lg-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
+  .lg-row a { color: var(--bordeaux); text-decoration: none; }
+  .lg-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .lg-row input[type=checkbox] { accent-color: var(--bordeaux); }
+
+  .lg-cta { width: 100%; padding: 16px; background: var(--bordeaux); color: var(--ivory); border: none; border-radius: var(--r-pill); font-family: var(--font-body); font-size: 14px; font-weight: 500; letter-spacing: 0.04em; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 24px; }
+  .lg-cta:hover { background: var(--ink); }
+
+  .lg-divider { display: flex; align-items: center; gap: 12px; margin: 28px 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--text-subtle); }
+  .lg-divider::before, .lg-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .lg-social { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 32px; }
+  .lg-soc { padding: 13px; border: 1px solid var(--line); background: var(--paper); border-radius: var(--r-sm); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+  .lg-soc:hover { border-color: var(--bordeaux); color: var(--bordeaux); }
+
+  .lg-foot { text-align: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; color: var(--text-subtle); text-transform: uppercase; }
+  .lg-foot a { color: var(--bordeaux); text-decoration: none; }
+
+/* iOS 입력창 자동 줌 방지 */
+input[type=text], input[type=email], input[type=password],
+input[type=number], textarea, select { font-size: 16px !important; }
+</style>
+</head>
+<body>
+
+<div class="lg-shell">
+  <aside class="lg-scene">
+    <div class="lg-top"><a href="../index.html">CHEMI&nbsp;LINE</a><span>CL · 002</span></div>
+    <div class="lg-mid">
+      <div class="eye">Welcome Back</div>
+      <h1>다시 만나는<br><em>그 결.</em></h1>
+    </div>
+    <div class="lg-bot"><blockquote>"기다림 끝에 한 사람을 짓습니다. 천천히, 그러나 정확하게."</blockquote><cite>— 매니저 김 서 연</cite></div>
+    <div class="lg-card-deco"></div>
+  </aside>
+
+  <main class="lg-form">
+    <div class="lg-form-wrap">
+      <div class="eye">Sign In · 회원</div>
+      <h2>당신의 <em>인연</em>으로<br>돌아오세요.</h2>
+      <p class="sub">캐미 라인 회원 계정으로 로그인하여 큐레이션을 이어가세요.</p>
+
+      <form>
+        <div class="field"><label class="field-label">이메일</label><input type="email" class="input" id="loginEmail" placeholder="you@email.com"></div>
+        <div class="field"><label class="field-label">비밀번호</label><input type="password" class="input" id="loginPw" placeholder="••••••••"></div>
+        <div class="lg-row">
+          <label><input type="checkbox" checked> 자동 로그인</label>
+          <a href="#" onclick="forgotPw()">비밀번호 찾기</a>
+        </div>
+        <div id="lgErr" style="color:var(--danger);font-size:13px;margin-bottom:12px;min-height:20px;"></div>
+        <button type="button" class="lg-cta" id="lgBtn" onclick="doLogin()">로그인 →</button>
+      </form>
+
+      <div class="lg-divider">또는</div>
+      <div class="lg-social">
+        <button class="lg-soc">Kakao</button>
+        <button class="lg-soc">Apple</button>
+      </div>
+
+      <p class="lg-foot">아직 회원이 아니신가요? <a href="signup.html">가입하기</a></p>
+    </div>
+  </main>
+</div>
+<script src="../assets/api.js"></script>
+<script>
+(function(){
+  const t=localStorage.getItem('ss_token'),u=JSON.parse(localStorage.getItem('ss_user')||'null');
+  if(t&&u){const b=window.location.origin;window.location.replace(u.role==='admin'?`${b}/pages/admin.html`:`${b}/pages/match.html`);}
+})();
+
+async function doLogin(){
+  const btn=document.getElementById('lgBtn');
+  const err=document.getElementById('lgErr');
+  const email=document.getElementById('loginEmail').value.trim();
+  const pw=document.getElementById('loginPw').value;
+  if(!email||!pw){err.textContent='이메일과 비밀번호를 입력해주세요.';return;}
+  btn.disabled=true;btn.textContent='로그인 중…';err.textContent='';
+  try{
+    const BASE=window.location.origin;
+    const res=await fetch(`${BASE}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+    const d=await res.json();
+    if(!res.ok){err.textContent=d.error||'로그인 실패';return;}
+    localStorage.setItem('ss_token',d.token);
+    localStorage.setItem('ss_user',JSON.stringify(d.user));
+    if (d.user?.role === 'admin') {
+          window.location.replace(`${BASE}/pages/admin.html`);
+      } else {
+          window.location.replace(`${BASE}/pages/match.html`);
+      }
+  }catch{err.textContent='서버에 연결할 수 없습니다.';}
+  finally{btn.disabled=false;btn.textContent='로그인 →';}
+}
+async function forgotPw(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const errEl = document.getElementById('lgErr');
+  if (!email) { errEl.textContent = '이메일을 먼저 입력해주세요.'; return; }
+
+  const btn = document.querySelector('[onclick="forgotPw()"]') || document.querySelector('a[onclick*="forgotPw"]');
+  if (btn) { btn.textContent = '요청 중...'; btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; }
+
+  try {
+    const r = await fetch(`${window.location.origin}/api/auth/reset-password-request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const d = await r.json().catch(() => ({}));
+    errEl.style.color = '#27AE60';
+    errEl.textContent = '✓ 관리자에게 비밀번호 재설정 요청을 보냈습니다. 고객센터(sasohan@sasohan.net)로도 이메일을 보내주시면 빠르게 처리해드립니다.';
+  } catch {
+    errEl.style.color = '';
+    errEl.textContent = '요청 중 오류가 발생했습니다. 고객센터로 이메일을 보내주세요.';
+  } finally {
+    if (btn) { btn.textContent = '비밀번호 찾기'; btn.style.pointerEvents = ''; btn.style.opacity = ''; }
+  }
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>

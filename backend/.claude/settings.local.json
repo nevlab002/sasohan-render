@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(netstat *)",
+      "PowerShell(Stop-Process *1)",
+      "PowerShell(Stop-Process *)",
+      "PowerShell(Stop-Process *2)",
+      "PowerShell($r = Invoke-WebRequest \"http://localhost:4000/api/health\" -UseBasicParsing; Write-Host \"Health: $\\($r.StatusCode\\) - $\\($r.Content\\)\")"
+    ]
+  }
+}
